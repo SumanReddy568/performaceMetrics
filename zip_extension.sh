@@ -75,15 +75,19 @@ if [ -f "$ZIP_FILE" ]; then
   rm -f "$ZIP_FILE"
 fi
 
-# Create new zip file (including only necessary files and ensuring manifest.json is at the root)
-zip -r "$ZIP_FILE" manifest.json \
-    src/ \
-    background/ \
-    lib/ \
-    assets/icons/icon16.png \
-    assets/icons/icon32.png \
-    assets/icons/icon48.png \
-    assets/icons/icon128.png \
+# Create a temporary build directory
+BUILD_DIR=$(mktemp -d)
+
+# Copy necessary files to build directory
+cp manifest.json "$BUILD_DIR/"
+cp -r src/ "$BUILD_DIR/"
+cp -r background/ "$BUILD_DIR/"
+cp -r lib/ "$BUILD_DIR/"
+cp -r assets/ "$BUILD_DIR/"
+
+# Create zip from build directory
+cd "$BUILD_DIR"
+zip -r "$OLDPWD/$ZIP_FILE" . \
     -x "*.git*" \
     -x ".github/*" \
     -x "*.sh" \
@@ -91,6 +95,10 @@ zip -r "$ZIP_FILE" manifest.json \
     -x "README.md" \
     -x "CHANGELOG.md" \
     -x "PRIVACY_POLICY.md"
+
+# Clean up
+cd "$OLDPWD"
+rm -rf "$BUILD_DIR"
 
 # Configure git
 git config --global user.name "GitHub Actions"
