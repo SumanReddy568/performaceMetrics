@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Performance Metrics",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Advanced performance metrics dashboard for web pages",
   "devtools_page": "/src/devtools/devtools.html",
   "icons": {
@@ -10,6 +10,24 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
+  "permissions": [
+    "storage",
+    "webNavigation",
+    "tabs",
+    "scripting",
+    "activeTab"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/*",
+        "lib/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
   "background": {
     "service_worker": "/background/service-worker.js"
   },
