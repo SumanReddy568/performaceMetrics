@@ -89,7 +89,7 @@ cp manifest.json "$BUILD_DIR/"
 cp -r src/* "$BUILD_DIR/src/"
 cp -r background/* "$BUILD_DIR/background/"
 cp -r lib/* "$BUILD_DIR/lib/"
-cp -r assets/icons/* "$BUILD_DIR/icons/"
+cp -r icons/* "$BUILD_DIR/icons/"  # Changed from assets/icons to icons
 
 # Create zip from build directory
 cd "$BUILD_DIR"
