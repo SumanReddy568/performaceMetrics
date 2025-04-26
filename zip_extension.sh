@@ -78,12 +78,18 @@ fi
 # Create a temporary build directory
 BUILD_DIR=$(mktemp -d)
 
-# Copy necessary files to build directory
+# Create necessary directories
+mkdir -p "$BUILD_DIR/icons"
+mkdir -p "$BUILD_DIR/src"
+mkdir -p "$BUILD_DIR/background"
+mkdir -p "$BUILD_DIR/lib"
+
+# Copy necessary files to build directory with correct structure
 cp manifest.json "$BUILD_DIR/"
-cp -r src/ "$BUILD_DIR/"
-cp -r background/ "$BUILD_DIR/"
-cp -r lib/ "$BUILD_DIR/"
-cp -r assets/ "$BUILD_DIR/"
+cp -r src/* "$BUILD_DIR/src/"
+cp -r background/* "$BUILD_DIR/background/"
+cp -r lib/* "$BUILD_DIR/lib/"
+cp -r assets/icons/* "$BUILD_DIR/icons/"
 
 # Create zip from build directory
 cd "$BUILD_DIR"
