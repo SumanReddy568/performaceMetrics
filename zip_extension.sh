@@ -83,13 +83,15 @@ mkdir -p "$BUILD_DIR/icons"
 mkdir -p "$BUILD_DIR/src"
 mkdir -p "$BUILD_DIR/background"
 mkdir -p "$BUILD_DIR/lib"
+mkdir -p "$BUILD_DIR/assets"
 
 # Copy necessary files to build directory with correct structure
 cp manifest.json "$BUILD_DIR/"
 cp -r src/* "$BUILD_DIR/src/"
 cp -r background/* "$BUILD_DIR/background/"
 cp -r lib/* "$BUILD_DIR/lib/"
-cp -r icons/* "$BUILD_DIR/icons/"  # Changed from assets/icons to icons
+cp -r icons/* "$BUILD_DIR/icons/"
+cp -r assets/global.css "$BUILD_DIR/assets/"
 
 # Create zip from build directory
 cd "$BUILD_DIR"
