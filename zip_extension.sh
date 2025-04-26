@@ -83,7 +83,9 @@ zip -r "$ZIP_FILE" * \
     -x "$EXTENSIONS_DIR/*" \
     -x "README.md" \
     -x "CHANGELOG.md" \
-    -x "PRIVACY_POLICY.md"
+    -x "PRIVACY_POLICY.md" \
+    -x "assets/*" \
+    -i "assets/icons/*"
 
 # Configure git
 git config --global user.name "GitHub Actions"
