@@ -15,7 +15,7 @@ Performance Metrics is a developer tool for monitoring and analyzing various per
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repo-link](https://github.com/SumanReddy568/performaceMetrics.git
+   git clone https://github.com/SumanReddy568/performaceMetrics.git
    ```
 2. Navigate to the project directory:
    ```bash
