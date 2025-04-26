@@ -75,38 +75,21 @@ if [ -f "$ZIP_FILE" ]; then
   rm -f "$ZIP_FILE"
 fi
 
-# Create a temporary build directory
-BUILD_DIR=$(mktemp -d)
-
-# Create necessary directories
-mkdir -p "$BUILD_DIR/icons"
-mkdir -p "$BUILD_DIR/src"
-mkdir -p "$BUILD_DIR/background"
-mkdir -p "$BUILD_DIR/lib"
-mkdir -p "$BUILD_DIR/assets"
-
-# Copy necessary files to build directory with correct structure
-cp manifest.json "$BUILD_DIR/"
-cp -r src/* "$BUILD_DIR/src/"
-cp -r background/* "$BUILD_DIR/background/"
-cp -r lib/* "$BUILD_DIR/lib/"
-cp -r icons/* "$BUILD_DIR/icons/"
-cp -r assets/global.css "$BUILD_DIR/assets/"
-
-# Create zip from build directory
-cd "$BUILD_DIR"
-zip -r "$OLDPWD/$ZIP_FILE" . \
+# Create zip from root directory
+zip -r "$ZIP_FILE" . \
+    -i "manifest.json" \
+    -i "src/*" \
+    -i "background/*" \
+    -i "lib/*" \
+    -i "icons/*" \
+    -i "assets/styles/global.css" \
+    -x "*extensions*" \
     -x "*.git*" \
     -x ".github/*" \
     -x "*.sh" \
-    -x "extensions/*" \
     -x "README.md" \
     -x "CHANGELOG.md" \
     -x "PRIVACY_POLICY.md"
-
-# Clean up
-cd "$OLDPWD"
-rm -rf "$BUILD_DIR"
 
 # Configure git
 git config --global user.name "GitHub Actions"
