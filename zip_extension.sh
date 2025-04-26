@@ -80,7 +80,7 @@ zip -r "$ZIP_FILE" manifest.json \
     src/ \
     background/ \
     lib/ \
-    assets/icons/ \
+    assets/ \
     -x "*.git*" \
     -x ".github/*" \
     -x "*.sh" \
