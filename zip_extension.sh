@@ -75,17 +75,19 @@ if [ -f "$ZIP_FILE" ]; then
   rm -f "$ZIP_FILE"
 fi
 
-# Create new zip file (excluding git and script files)
-zip -r "$ZIP_FILE" * \
+# Create new zip file (including only necessary files and ensuring manifest.json is at the root)
+zip -r "$ZIP_FILE" manifest.json \
+    src/ \
+    background/ \
+    lib/ \
+    assets/icons/ \
     -x "*.git*" \
     -x ".github/*" \
     -x "*.sh" \
-    -x "$EXTENSIONS_DIR/*" \
+    -x "extensions/*" \
     -x "README.md" \
     -x "CHANGELOG.md" \
-    -x "PRIVACY_POLICY.md" \
-    -x "assets/*" \
-    -i "assets/icons/*"
+    -x "PRIVACY_POLICY.md"
 
 # Configure git
 git config --global user.name "GitHub Actions"
