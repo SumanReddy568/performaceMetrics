@@ -96,6 +96,10 @@ class PerformanceMetricsDevTools {
       this.panels.jsHeap = new JSHeapPanel('jsHeapPanel');
       this.panels.layoutShifts = new LayoutShiftsPanel('layoutShiftsPanel');
       this.panels.resourceTiming = new ResourceTimingPanel('resourceTimingPanel');
+      this.panels.firstPaint = new FirstPaintPanel('firstPaintPanel');
+      this.panels.pageLoad = new PageLoadPanel('pageLoadPanel');
+      this.panels.longTasks = new LongTasksPanel('longTasksPanel');
+      this.panels.apiPerformance = new APIPerformancePanel('apiPerformancePanel');
     } catch (e) {
       console.error("Error loading panels:", e);
     }
@@ -113,7 +117,7 @@ class PerformanceMetricsDevTools {
   updatePanels(data) {
     try {
       console.log('Received metrics update:', data); // Debug log
-      
+
       if (data.fps && this.panels.fps) {
         this.panels.fps.update(data.fps);
       }
@@ -129,7 +133,7 @@ class PerformanceMetricsDevTools {
       if (data.dom && this.panels.dom) {
         this.panels.dom.update(data.dom);
       }
-       if (data.memory && this.panels.jsHeap) {
+      if (data.memory && this.panels.jsHeap) {
         this.panels.jsHeap.update(data.memory);
       }
       if (data.layoutShifts && this.panels.layoutShifts) {
@@ -137,6 +141,18 @@ class PerformanceMetricsDevTools {
       }
       if (data.resourceTiming && this.panels.resourceTiming) {
         this.panels.resourceTiming.update(data.resourceTiming);
+      }
+      if (data.firstPaint && this.panels.firstPaint) {
+        this.panels.firstPaint.update(data.firstPaint);
+      }
+      if (data.pageLoad && this.panels.pageLoad) {
+        this.panels.pageLoad.update(data.pageLoad);
+      }
+      if (data.longTasks && this.panels.longTasks) {
+        this.panels.longTasks.update(data.longTasks);
+      }
+      if (data.apiPerformance && this.panels.apiPerformance) {
+        this.panels.apiPerformance.update(data.apiPerformance);
       }
     } catch (e) {
       console.error("Error updating panels:", e);
