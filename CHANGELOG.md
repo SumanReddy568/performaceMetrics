@@ -1,3 +1,6 @@
+## [1.0.1] - 2025-04-29
+- Chrome store review fixes
+
 ## [1.0.1] - 2025-04-26
 - perfmission files json fix
 
