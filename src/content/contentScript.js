@@ -134,22 +134,22 @@ class PerformanceCollector {
         measure();
     }
 
-    startMemoryMonitor() {
+    collectMemory() {
         if (!window.performance?.memory) return;
-        
-        const collect = () => {
-            const mem = performance.memory;
-            this.metrics.memory.push({
-                usedJSHeapSize: mem.usedJSHeapSize / (1024 * 1024),
-                totalJSHeapSize: mem.totalJSHeapSize / (1024 * 1024),
-                jsHeapSizeLimit: mem.jsHeapSizeLimit / (1024 * 1024),
-                timestamp: performance.now()
-            });
 
-            setTimeout(collect, 1000);
-        };
-
-        collect();
+        setInterval(() => {
+            try {
+                const memory = performance.memory;
+                this.performanceData.memory.push({
+                    usedJSHeapSize: memory.usedJSHeapSize / (1024 * 1024),
+                    totalJSHeapSize: memory.totalJSHeapSize / (1024 * 1024),
+                    jsHeapSizeLimit: memory.jsHeapSizeLimit / (1024 * 1024),
+                    timestamp: performance.now()
+                });
+            } catch (e) {
+                console.error("Error collecting memory metrics:", e);
+            }
+        }, 1000);
     }
 
     collectNetwork() {
