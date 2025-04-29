@@ -5,6 +5,16 @@ class PerformanceMetricsDevTools {
     this.panels = {};
     this.init();
     this.updatePageUrl();
+    this.refresh();
+  }
+
+  async refresh() {
+    // Wait a bit to ensure everything is initialized
+    setTimeout(() => {
+      chrome.devtools.inspectedWindow.reload({
+        ignoreCache: true
+      });
+    }, 1000);
   }
 
   updatePageUrl() {
@@ -48,14 +58,13 @@ class PerformanceMetricsDevTools {
         this.port.disconnect();
       }
 
-      this.port = chrome.runtime.connect({ 
-        name: "devtools"
-      });
+      this.port = chrome.runtime.connect({ name: "devtools" });
 
-      // Send init message with tab ID
+      // Send init message with tab ID and trigger refresh
       this.port.postMessage({
         type: "init",
-        tabId: chrome.devtools.inspectedWindow.tabId
+        tabId: chrome.devtools.inspectedWindow.tabId,
+        shouldRefresh: true
       });
 
       this.port.onMessage.addListener((message) => {
@@ -272,6 +281,8 @@ class CPUPanel {
     }
   }
 }
+
+
 
 // Initialize the devtools
 new PerformanceMetricsDevTools();

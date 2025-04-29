@@ -1,4 +1,5 @@
 let connections = new Map();
+let refreshedTabs = new Set();
 
 // Log active connections for debugging
 function logConnections() {
@@ -11,9 +12,15 @@ chrome.runtime.onConnect.addListener(function(port) {
   if (port.name !== "devtools") return;
 
   const extensionListener = function(message) {
-    console.log('Received message:', message);
     if (message.type === "init") {
       connections.set(message.tabId, port);
+      
+      // Check if this tab needs to be refreshed
+      if (message.shouldRefresh && !refreshedTabs.has(message.tabId)) {
+        refreshedTabs.add(message.tabId);
+        chrome.tabs.reload(message.tabId, { bypassCache: true });
+      }
+      
       console.log('Connection established for tab:', message.tabId);
       logConnections();
     }
@@ -27,11 +34,19 @@ chrome.runtime.onConnect.addListener(function(port) {
       if (conn === port) {
         console.log('Removing connection for tab:', tabId);
         connections.delete(tabId);
+
+        // Notify the content script to deactivate
+        chrome.tabs.sendMessage(tabId, { type: 'deactivate' });
         break;
       }
     }
     logConnections();
   });
+});
+
+// Clear refresh status when tab is closed
+chrome.tabs.onRemoved.addListener((tabId) => {
+  refreshedTabs.delete(tabId);
 });
 
 // Forward content script messages to devtools

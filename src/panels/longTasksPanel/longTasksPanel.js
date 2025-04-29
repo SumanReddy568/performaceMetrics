@@ -50,16 +50,23 @@ class LongTasksPanel {
   }
 
   update(data) {
-    this.data.push(data);
-    if (this.data.length > this.maxDataPoints) {
-      this.data.shift();
-    }
+    if (!data || (!data.duration && !Array.isArray(data))) return;
+    
+    // Handle both single items and arrays
+    const items = Array.isArray(data) ? data : [data];
+    
+    items.forEach(item => {
+      this.data.push(item);
+      if (this.data.length > this.maxDataPoints) {
+        this.data.shift();
+      }
+    });
 
-    const avgDuration = data.duration.toFixed(1);
+    const avgDuration = this.data.reduce((sum, task) => sum + task.duration, 0) / this.data.length;
     document.getElementById('totalTasks').textContent = `Count: ${this.data.length}`;
-    document.getElementById('avgDuration').textContent = `Avg: ${avgDuration}ms`;
+    document.getElementById('avgDuration').textContent = `Avg: ${avgDuration.toFixed(1)}ms`;
 
-    this.chart.data.labels = this.data.map((_, i) => `Task ${i + 1}`);
+    this.chart.data.labels = this.data.map(d => d.name || `${d.type} ${d.method || ''} (${d.status || 'Unknown'})`);
     this.chart.data.datasets[0].data = this.data.map(d => d.duration);
     this.chart.update();
   }

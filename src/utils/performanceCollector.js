@@ -122,7 +122,7 @@ class PerformanceCollector {
   startNetworkMonitor() {
     let requests = 0;
     let transferred = 0;
-    let apiCalls = [];  // Change from Map to Array
+    let apiCalls = [];
 
     // Monitor XMLHttpRequest
     const originalXHR = window.XMLHttpRequest.prototype.send;
@@ -131,46 +131,56 @@ class PerformanceCollector {
       const url = this._url;
       
       this.addEventListener('loadend', () => {
-        const duration = performance.now() - startTime;
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+        
         try {
-          const size = parseInt(this.getResponseHeader('content-length')) || this.responseText.length;
-          apiCalls.push({ url, duration, size, timestamp: Date.now() }); // Change to array push
+          const size = parseInt(this.getResponseHeader('content-length')) || this.responseText?.length || 0;
+          const status = this.status;
+          apiCalls.push({
+            url,
+            duration,
+            size,
+            status,
+            type: 'XHR',
+            timestamp: Date.now()
+          });
           transferred += size;
+          requests++;
         } catch (e) {
-          console.warn('Error measuring response:', e);
+          console.warn('Error measuring XHR response:', e);
         }
       });
       
-      requests++;
       return originalXHR.apply(this, args);
-    };
-
-    const originalOpen = window.XMLHttpRequest.prototype.open;
-    window.XMLHttpRequest.prototype.open = function(method, url) {
-      this._url = url;
-      return originalOpen.apply(this, arguments);
     };
 
     // Monitor Fetch API
     const originalFetch = window.fetch;
-    window.fetch = async function(url, options) {
+    window.fetch = async function(resource, options) {
       const startTime = performance.now();
-      requests++;
+      const url = typeof resource === 'string' ? resource : resource.url;
       
       try {
         const response = await originalFetch.apply(this, arguments);
+        const endTime = performance.now();
+        const duration = endTime - startTime;
         const clone = response.clone();
-        const buffer = await clone.arrayBuffer();
-        const duration = performance.now() - startTime;
         
-        apiCalls.push({  // Change to array push
-          url: url.toString(),
-          duration,
-          size: buffer.byteLength,
-          timestamp: Date.now()
+        // Process response asynchronously
+        clone.arrayBuffer().then(buffer => {
+          apiCalls.push({
+            url,
+            duration,
+            size: buffer.byteLength,
+            status: response.status,
+            type: 'Fetch',
+            timestamp: Date.now()
+          });
+          transferred += buffer.byteLength;
+          requests++;
         });
         
-        transferred += buffer.byteLength;
         return response;
       } catch (e) {
         console.warn('Error measuring fetch response:', e);
@@ -180,21 +190,22 @@ class PerformanceCollector {
 
     // Record metrics every second
     setInterval(() => {
-      this.metrics.network.push({ 
-        requests, 
-        transferred, 
-        timestamp: performance.now() 
-      });
-      
       if (apiCalls.length > 0) {
-        this.metrics.apiPerformance = [...apiCalls];
+        this.metrics.apiPerformance = apiCalls;
+        this.metrics.network.push({ 
+          requests, 
+          transferred, 
+          timestamp: performance.now() 
+        });
+        
         console.log('API Performance collected:', apiCalls);
+        console.log('Network metrics:', { requests, transferred });
       }
       
-      // Reset counters after recording
+      // Reset counters
       requests = 0;
       transferred = 0;
-      apiCalls = [];  // Clear array instead of Map
+      apiCalls = [];
     }, 1000);
   }
 
@@ -296,12 +307,25 @@ class PerformanceCollector {
     try {
       const observer = new PerformanceObserver((list) => {
         list.getEntries().forEach(entry => {
-          this.metrics.longTasks.push({
+          const taskDetails = {
             duration: entry.duration,
             startTime: entry.startTime,
+            name: 'Unknown Task',
             timestamp: Date.now()
-          });
-          console.log('Long Task collected:', entry.duration);
+          };
+
+          // Extract task name from attribution
+          if (entry.attribution && entry.attribution.length > 0) {
+            const attribution = entry.attribution[0];
+            if (attribution.containerType) {
+              taskDetails.name = `${attribution.containerType}${attribution.containerName ? ': ' + attribution.containerName : ''}`;
+            } else if (attribution.name) {
+              taskDetails.name = attribution.name;
+            }
+          }
+
+          this.metrics.longTasks.push(taskDetails);
+          console.log('Long Task collected:', taskDetails);
         });
       });
       observer.observe({ entryTypes: ['longtask'] });

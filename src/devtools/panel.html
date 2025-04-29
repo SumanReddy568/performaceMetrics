@@ -34,9 +34,60 @@
       height: 24px;
       margin-left: 8px;
     }
+    .panel.disabled {
+      position: relative;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    
+    .panel.disabled::before {
+      content: "Coming in v1.0.2";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      z-index: 10;
+      font-size: 14px;
+    }
+    
+    .panel.disabled::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 5;
+    }
+
+    .refresh-notice {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #4CAF50;
+      color: white;
+      text-align: center;
+      padding: 8px;
+      font-size: 14px;
+      animation: fadeOut 3s forwards;
+      z-index: 1000;
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      70% { opacity: 1; }
+      100% { opacity: 0; visibility: hidden; }
+    }
   </style>
 </head>
 <body>
+  <div class="refresh-notice">Page refreshing to start performance monitoring...</div>
   <div class="header">
     <div class="header-container">
       <h1>Performance Metrics</h1>
@@ -65,7 +116,7 @@
     <div class="panel" id="firstPaintPanel"></div>
     <div class="panel" id="pageLoadPanel"></div>
     <div class="panel" id="longTasksPanel"></div>
-    <div class="panel" id="apiPerformancePanel"></div>
+    <div class="panel disabled" id="apiPerformancePanel" title="API Performance monitoring will be available in the next version"></div>
   </div>
   <script src="/src/panels/apiPerformancePanel/apiPerformancePanel.js"></script>
   <script src="/src/panels/firstPaintPanel/firstPaintPanel.js"></script>
