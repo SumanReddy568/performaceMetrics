@@ -41,7 +41,7 @@
     }
     
     .panel.disabled::before {
-      content: "Coming in v1.0.2";
+      content: "Coming in v1.0.3";
       position: absolute;
       top: 50%;
       left: 50%;
@@ -84,6 +84,90 @@
       70% { opacity: 1; }
       100% { opacity: 0; visibility: hidden; }
     }
+
+    .system-metrics {
+      display: flex;
+      gap: 16px;
+      padding: 8px 16px;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .metric-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .metric-label {
+      color: #888;
+    }
+    .metric-value {
+      font-weight: 500;
+      color: #fff;
+    }
+    .metric-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+    .indicator-good { background: #4CAF50; }
+    .indicator-warning { background: #FFC107; }
+    .indicator-bad { background: #F44336; }
+
+    .url-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.1);
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-top: 8px;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    
+    .url-label {
+      flex-shrink: 0;
+      color: #888;
+      font-size: 13px;
+    }
+    
+    .url-value {
+      color: #fff;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: calc(100% - 100px);
+      display: inline-block;
+    }
+    
+    .url-value:hover {
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    #refreshButton {
+      background: #007BFF;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    #refreshButton:hover {
+      background: #0056b3;
+    }
+
+    #refreshButton:active {
+      transform: scale(0.95);
+    }
   </style>
 </head>
 <body>
@@ -97,10 +181,38 @@
           <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
         </svg>
       </a>
+      <button id="refreshButton">Refresh</button>
     </div>
     <div class="url-container">
       <span class="url-label">Monitoring:</span>
-      <span class="url-value" id="currentUrl">Loading...</span>
+      <span class="url-value" id="currentUrl" title="">Loading...</span>
+    </div>
+    <div class="system-metrics">
+      <div class="metric-item">
+        <span class="metric-label">Chrome:</span>
+        <span class="metric-value" id="chrome-version">--</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">Windows:</span>
+        <span class="metric-value" id="chrome-windows">--</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">Tabs:</span>
+        <span class="metric-value" id="chrome-tabs">--</span>
+      </div>
+      <div class="metric-item">
+        <div class="metric-indicator" id="network-indicator"></div>
+        <span class="metric-label">Network:</span>
+        <span class="metric-value" id="network-status">--</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">Memory:</span>
+        <span class="metric-value" id="system-memory">--</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">CPU:</span>
+        <span class="metric-value" id="system-cpu">--</span>
+      </div>
     </div>
   </div>
   

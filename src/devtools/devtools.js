@@ -6,6 +6,8 @@ class PerformanceMetricsDevTools {
     this.init();
     this.updatePageUrl();
     this.refresh();
+    this.initSystemMetrics();
+    this.setupRefreshButton();
   }
 
   async refresh() {
@@ -17,20 +19,68 @@ class PerformanceMetricsDevTools {
     }, 1000);
   }
 
+  setupRefreshButton() {
+    const refreshButton = document.getElementById('refreshButton');
+    refreshButton.addEventListener('click', () => {
+      this.refreshPanels();
+    });
+  }
+
+  refreshPanels() {
+    this.clearPanels();
+    this.loadPanels();
+  }
+
   updatePageUrl() {
     chrome.devtools.inspectedWindow.eval(
       'window.location.href',
       (result, error) => {
         if (!error) {
-          document.getElementById('currentUrl').textContent = result;
+          const urlElement = document.getElementById('currentUrl');
+          urlElement.textContent = this.formatUrl(result);
+          urlElement.title = result; // Set full URL as tooltip
         }
       }
     );
 
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.type === 'api-performance-update') {
+          apiPerformancePanel.update(message.data);
+      }
+  });
+
     // Update URL when page changes
     chrome.devtools.network.onNavigated.addListener((url) => {
-      document.getElementById('currentUrl').textContent = url;
+      const urlElement = document.getElementById('currentUrl');
+      urlElement.textContent = this.formatUrl(url);
+      urlElement.title = url; // Set full URL as tooltip
     });
+  }
+
+  formatUrl(url) {
+    try {
+      const urlObj = new URL(url);
+      const maxLength = 75; // Maximum URL length to display
+      
+      let formatted = url;
+      if (url.length > maxLength) {
+        // Keep protocol and hostname
+        const base = `${urlObj.protocol}//${urlObj.hostname}`;
+        const path = urlObj.pathname + urlObj.search + urlObj.hash;
+        
+        if (base.length > maxLength - 3) {
+          // If hostname itself is too long
+          formatted = base.substring(0, maxLength - 3) + '...';
+        } else {
+          // Truncate the path part
+          const availableLength = maxLength - base.length - 3;
+          formatted = base + path.substring(0, availableLength) + '...';
+        }
+      }
+      return formatted;
+    } catch (e) {
+      return url.substring(0, 75) + '...';
+    }
   }
 
   async init() {
@@ -70,6 +120,7 @@ class PerformanceMetricsDevTools {
       this.port.onMessage.addListener((message) => {
         console.log('Devtools received message:', message);
         if (message.type === 'metrics-update') {
+          console.log('Received API data in devtools:', message.data.apiPerformance); // ADD THIS LINE
           this.updatePanels(message.data);
         }
       });
@@ -116,7 +167,11 @@ class PerformanceMetricsDevTools {
 
   clearPanels() {
     try {
-      Object.values(this.panels).forEach(panel => panel.destroy());
+      Object.values(this.panels).forEach(panel => {
+        if (panel && panel.destroy) {
+          panel.destroy();
+        }
+      });
       this.panels = {};
     } catch (e) {
       console.error("Error clearing panels:", e);
@@ -161,11 +216,81 @@ class PerformanceMetricsDevTools {
         this.panels.longTasks.update(data.longTasks);
       }
       if (data.apiPerformance && this.panels.apiPerformance) {
+        console.log('Updating API panel with:', data.apiPerformance); // ADD THIS LINE
         this.panels.apiPerformance.update(data.apiPerformance);
       }
     } catch (e) {
       console.error("Error updating panels:", e);
     }
+  }
+
+  async initSystemMetrics() {
+    // Get Chrome version
+    chrome.runtime.getPlatformInfo(info => {
+      const userAgent = navigator.userAgent;
+      const chromeVersion = userAgent.match(/Chrome\/([0-9.]+)/)[1];
+      document.getElementById('chrome-version').textContent = `v${chromeVersion}`;
+    });
+
+    // Setup periodic updates
+    this.updateSystemMetrics();
+    setInterval(() => this.updateSystemMetrics(), 5000);
+  }
+
+  async updateSystemMetrics() {
+    try {
+      // Get Chrome windows and tabs count
+      chrome.windows.getAll({ populate: true }, windows => {
+        const windowCount = windows.length;
+        const tabCount = windows.reduce((count, window) => count + window.tabs.length, 0);
+        document.getElementById('chrome-windows').textContent = windowCount;
+        document.getElementById('chrome-tabs').textContent = tabCount;
+      });
+
+      // Get network status
+      const networkStatus = navigator.onLine ? 'Online' : 'Offline';
+      const indicator = document.getElementById('network-indicator');
+      indicator.className = 'metric-indicator ' + (navigator.onLine ? 'indicator-good' : 'indicator-bad');
+      document.getElementById('network-status').textContent = networkStatus;
+
+      // Get system memory (if available)
+      if (chrome.system?.memory) {
+        chrome.system.memory.getInfo(info => {
+          const usedMemory = ((info.capacity - info.availableCapacity) / info.capacity * 100).toFixed(1);
+          const formattedMemory = `${usedMemory}% (${this.formatBytes(info.capacity - info.availableCapacity)} / ${this.formatBytes(info.capacity)})`;
+          document.getElementById('system-memory').textContent = formattedMemory;
+        });
+      }
+
+      // Get CPU info (if available)
+      if (chrome.system?.cpu) {
+        chrome.system.cpu.getInfo(info => {
+          let totalUsage = 0;
+          let validProcessors = 0;
+
+          info.processors.forEach(p => {
+            if (p.usage && typeof p.usage.user === 'number') {
+              totalUsage += (p.usage.user + p.usage.kernel) / p.usage.total * 100;
+              validProcessors++;
+            }
+          });
+
+          const avgUsage = validProcessors > 0 ? (totalUsage / validProcessors).toFixed(1) : 0;
+          document.getElementById('system-cpu').textContent = `${avgUsage}%`;
+        });
+      }
+    } catch (e) {
+      console.error('Error updating system metrics:', e);
+    }
+  }
+
+  // Helper function to format bytes
+  formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
   }
 }
 
@@ -281,8 +406,6 @@ class CPUPanel {
     }
   }
 }
-
-
 
 // Initialize the devtools
 new PerformanceMetricsDevTools();

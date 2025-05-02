@@ -66,10 +66,14 @@ class LayoutShiftsPanel {
     }
   
     destroy() {
-      if (this.chart) {
-        this.chart.destroy();
+      try {
+        if (this.chart) {
+          this.chart.destroy();
+          this.chart = null;
+        }
+        this.container.innerHTML = '';
+      } catch (e) {
+        console.error("Error destroying LayoutShifts chart:", e);
       }
-      this.container.innerHTML = '';
     }
   }
-  

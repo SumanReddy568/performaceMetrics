@@ -81,15 +81,20 @@ class APIPerformancePanel {
   }
 
   update(data) {
-    if (!Array.isArray(data)) {
-      console.warn('API Performance data is not an array:', data);
+    if (!Array.isArray(data) || data.length === 0) {
+      console.warn('No API Performance data available.');
+      document.getElementById('totalCalls').textContent = 'Total: 0';
+      document.getElementById('slowestApi').textContent = 'Slowest: --';
+      document.getElementById('avgResponse').textContent = 'Avg: --';
+      this.chart.data.labels = [];
+      this.chart.data.datasets[0].data = [];
+      this.chart.update();
+      document.getElementById('apiList').innerHTML = '<tr><td colspan="6">No data available</td></tr>';
       return;
     }
 
     // Update internal data store
     this.data = data.slice(-this.maxDataPoints);
-
-    if (this.data.length === 0) return;
 
     // Sort APIs by duration
     const sortedData = [...this.data].sort((a, b) => b.duration - a.duration);
@@ -134,9 +139,14 @@ class APIPerformancePanel {
   }
 
   destroy() {
-    if (this.chart) {
-      this.chart.destroy();
+    try {
+      if (this.chart) {
+        this.chart.destroy();
+        this.chart = null;
+      }
+      this.container.innerHTML = '';
+    } catch (e) {
+      console.error("Error destroying APIPerformance chart:", e);
     }
-    this.container.innerHTML = '';
   }
 }

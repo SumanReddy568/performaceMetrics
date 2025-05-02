@@ -21,7 +21,10 @@
   "permissions": [
     "storage",
     "tabs",
-    "activeTab"
+    "activeTab",
+    "system.cpu",
+    "system.memory",
+    "system.storage"
   ],
   "web_accessible_resources": [
     {

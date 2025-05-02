@@ -66,15 +66,27 @@ class LongTasksPanel {
     document.getElementById('totalTasks').textContent = `Count: ${this.data.length}`;
     document.getElementById('avgDuration').textContent = `Avg: ${avgDuration.toFixed(1)}ms`;
 
-    this.chart.data.labels = this.data.map(d => d.name || `${d.type} ${d.method || ''} (${d.status || 'Unknown'})`);
+    this.chart.data.labels = this.data.map(d => {
+      let label = d.name || `${d.type} ${d.method || ''} (${d.status || 'Unknown'})`;
+      // Truncate label if it's too long
+      if (label.length > 30) {
+        label = label.substring(0, 27) + '...';
+      }
+      return label;
+    });
     this.chart.data.datasets[0].data = this.data.map(d => d.duration);
     this.chart.update();
   }
 
   destroy() {
-    if (this.chart) {
-      this.chart.destroy();
+    try {
+      if (this.chart) {
+        this.chart.destroy();
+        this.chart = null;
+      }
+      this.container.innerHTML = '';
+    } catch (e) {
+      console.error("Error destroying LongTasks chart:", e);
     }
-    this.container.innerHTML = '';
   }
 }

@@ -115,4 +115,16 @@ class NetworkPanel {
       this.chart.update('none'); // Use 'none' mode for better performance
     });
   }
+
+  destroy() {
+    try {
+      if (this.chart) {
+        this.chart.destroy();
+        this.chart = null;
+      }
+      this.container.innerHTML = '';
+    } catch (e) {
+      console.error("Error destroying Network chart:", e);
+    }
+  }
 }

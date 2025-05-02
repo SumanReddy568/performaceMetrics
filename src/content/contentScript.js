@@ -86,6 +86,7 @@ class PerformanceCollector {
             };
 
             try {
+                console.log('Sending API data:', currentData.apiPerformance); // ADD THIS LINE
                 chrome.runtime.sendMessage({
                     type: 'metrics-update',
                     data: currentData
@@ -430,12 +431,19 @@ class PerformanceCollector {
             const startTime = performance.now();
             const method = this._method || 'GET';
             const url = this._url || 'Unknown URL';
+            const xhr = this; // Store 'this' for use in the event listener
 
-            this.addEventListener('loadend', () => {
+            this.addEventListener('loadend', function() { // Use a regular function to capture 'this'
                 const duration = performance.now() - startTime;
                 try {
-                    const size = parseInt(this.getResponseHeader('content-length')) || this.responseText?.length || 0;
-                    const status = this.status;
+                    let size = 0;
+                    try {
+                        size = parseInt(xhr.getResponseHeader('content-length')) || xhr.responseText?.length || 0;
+                    } catch (e) {
+                        console.warn('Error getting XHR response header:', e);
+                        size = xhr.responseText?.length || 0; // Fallback if header access fails
+                    }
+                    const status = xhr.status;
                     apiCalls.push({
                         type: 'XHR',
                         method,
@@ -445,6 +453,7 @@ class PerformanceCollector {
                         status,
                         timestamp: Date.now()
                     });
+                    console.log('XHR API call intercepted:', { method, url, duration, size, status }); // Log each call
                 } catch (e) {
                     console.warn('Error measuring XHR response:', e);
                 }
@@ -473,17 +482,36 @@ class PerformanceCollector {
                 
                 // Clone response to avoid consuming it
                 const clone = response.clone();
-                const size = parseInt(clone.headers.get('content-length')) || 0;
                 
-                apiCalls.push({
-                    type: 'Fetch',
-                    method,
-                    url,
-                    duration,
-                    size,
-                    status: response.status,
-                    timestamp: Date.now()
-                });
+                // Use try/catch to handle potential CORS issues
+                try {
+                    const buffer = await clone.arrayBuffer();
+                    const size = buffer.byteLength;
+
+                    apiCalls.push({
+                        type: 'Fetch',
+                        method,
+                        url,
+                        duration,
+                        size,
+                        status: response.status,
+                        timestamp: Date.now()
+                    });
+                    console.log('Fetch API call intercepted:', { method, url, duration, size, status }); // Log each call
+                } catch (e) {
+                    console.warn('CORS error or other issue reading fetch response:', e);
+                    // Still record the call, but with limited information
+                    apiCalls.push({
+                        type: 'Fetch',
+                        method,
+                        url,
+                        duration,
+                        size: 0,
+                        status: response.status,
+                        timestamp: Date.now(),
+                        error: 'CORS or Read Error'
+                    });
+                }
 
                 return response;
             } catch (e) {
@@ -498,9 +526,11 @@ class PerformanceCollector {
                 // Keep only the last 50 API calls
                 this.performanceData.apiPerformance = apiCalls.slice(-50);
                 console.log('API Performance collected:', this.performanceData.apiPerformance);
-                
+
                 // Reset the array but keep the reference
                 apiCalls.length = 0;
+            } else {
+                console.log('No API calls recorded in the last second.');
             }
         }, 1000);
     }

@@ -11,6 +11,7 @@ class PerformanceCollector {
       longTasks: [],
       apiPerformance: []
     };
+    this._apiCalls = []; // Initialize API calls array
     this.listeners = []; // Add listeners array initialization
     this.init();
   }
@@ -31,6 +32,124 @@ class PerformanceCollector {
 
   addListener(callback) {
     this.listeners.push(callback);
+  }
+
+  collectApiPerformance() {
+    // Monitor XMLHttpRequest
+    const originalXHR = window.XMLHttpRequest.prototype.send;
+    window.XMLHttpRequest.prototype.send = function (...args) {
+      const startTime = performance.now();
+      const method = this._method || 'GET';
+      const url = this._url || 'Unknown URL';
+      const xhr = this;
+
+      this.addEventListener('loadend', function () {
+        const duration = performance.now() - startTime;
+        try {
+          let size = 0;
+          try {
+            size = parseInt(xhr.getResponseHeader('content-length')) ||
+              xhr.responseText?.length || 0;
+          } catch (e) {
+            size = xhr.responseText?.length || 0;
+          }
+
+          this._apiCalls.push({
+            type: 'XHR',
+            method,
+            url,
+            duration,
+            size,
+            status: xhr.status,
+            timestamp: Date.now()
+          });
+
+          // Send immediately when we get new API data
+          this.sendApiPerformanceUpdate();
+        } catch (e) {
+          console.warn('Error measuring XHR response:', e);
+        }
+      }.bind(this));
+
+      return originalXHR.apply(this, args);
+    }.bind(this);
+
+    const originalOpen = window.XMLHttpRequest.prototype.open;
+    window.XMLHttpRequest.prototype.open = function (method, url) {
+      this._method = method;
+      this._url = url;
+      return originalOpen.apply(this, arguments);
+    };
+
+    // Monitor Fetch API
+    const originalFetch = window.fetch;
+    window.fetch = async function (resource, options = {}) {
+      const startTime = performance.now();
+      const method = options.method || 'GET';
+      const url = typeof resource === 'string' ? resource : resource.url;
+
+      try {
+        const response = await originalFetch.apply(this, arguments);
+        const duration = performance.now() - startTime;
+
+        try {
+          const clone = response.clone();
+          const buffer = await clone.arrayBuffer();
+          const size = buffer.byteLength;
+
+          this._apiCalls.push({
+            type: 'Fetch',
+            method,
+            url,
+            duration,
+            size,
+            status: response.status,
+            timestamp: Date.now()
+          });
+
+          // Send immediately when we get new API data
+          this.sendApiPerformanceUpdate();
+        } catch (e) {
+          this._apiCalls.push({
+            type: 'Fetch',
+            method,
+            url,
+            duration,
+            size: 0,
+            status: response.status,
+            timestamp: Date.now(),
+            error: 'CORS or Read Error'
+          });
+          this.sendApiPerformanceUpdate();
+        }
+
+        return response;
+      } catch (e) {
+        console.warn('Error measuring fetch response:', e);
+        throw e;
+      }
+    }.bind(this);
+
+    // Also send periodic updates in case we miss any
+    setInterval(() => {
+      if (this._apiCalls.length > 0) {
+        this.sendApiPerformanceUpdate();
+      }
+    }, 1000);
+  }
+
+  sendApiPerformanceUpdate() {
+    try {
+      chrome.runtime.sendMessage({
+        type: 'api-performance-update',
+        data: [...this._apiCalls] // Send a copy of the array
+      });
+
+      // Keep only the last 50 API calls to prevent memory issues
+      this._apiCalls = this._apiCalls.slice(-50);
+    } catch (e) {
+      console.error('Error sending API performance data:', e);
+    }
   }
 
   sendUpdates() {
@@ -126,14 +245,14 @@ class PerformanceCollector {
 
     // Monitor XMLHttpRequest
     const originalXHR = window.XMLHttpRequest.prototype.send;
-    window.XMLHttpRequest.prototype.send = function(...args) {
+    window.XMLHttpRequest.prototype.send = function (...args) {
       const startTime = performance.now();
       const url = this._url;
-      
+
       this.addEventListener('loadend', () => {
         const endTime = performance.now();
         const duration = endTime - startTime;
-        
+
         try {
           const size = parseInt(this.getResponseHeader('content-length')) || this.responseText?.length || 0;
           const status = this.status;
@@ -151,22 +270,22 @@ class PerformanceCollector {
           console.warn('Error measuring XHR response:', e);
         }
       });
-      
+
       return originalXHR.apply(this, args);
     };
 
     // Monitor Fetch API
     const originalFetch = window.fetch;
-    window.fetch = async function(resource, options) {
+    window.fetch = async function (resource, options) {
       const startTime = performance.now();
       const url = typeof resource === 'string' ? resource : resource.url;
-      
+
       try {
         const response = await originalFetch.apply(this, arguments);
         const endTime = performance.now();
         const duration = endTime - startTime;
         const clone = response.clone();
-        
+
         // Process response asynchronously
         clone.arrayBuffer().then(buffer => {
           apiCalls.push({
@@ -180,7 +299,7 @@ class PerformanceCollector {
           transferred += buffer.byteLength;
           requests++;
         });
-        
+
         return response;
       } catch (e) {
         console.warn('Error measuring fetch response:', e);
@@ -192,16 +311,16 @@ class PerformanceCollector {
     setInterval(() => {
       if (apiCalls.length > 0) {
         this.metrics.apiPerformance = apiCalls;
-        this.metrics.network.push({ 
-          requests, 
-          transferred, 
-          timestamp: performance.now() 
+        this.metrics.network.push({
+          requests,
+          transferred,
+          timestamp: performance.now()
         });
-        
+
         console.log('API Performance collected:', apiCalls);
         console.log('Network metrics:', { requests, transferred });
       }
-      
+
       // Reset counters
       requests = 0;
       transferred = 0;
@@ -227,7 +346,7 @@ class PerformanceCollector {
         listeners: this.countEventListeners(),
         timestamp: performance.now()
       };
-      
+
       this.metrics.dom.push(metrics);
       console.log('DOM Metrics:', metrics); // Debug log
     }, 1000);
@@ -246,7 +365,7 @@ class PerformanceCollector {
       const events = getEventListeners ? getEventListeners(element) : {};
       count += Object.keys(events).reduce((acc, key) => acc + events[key].length, 0);
     }
-    
+
     return count;
   }
 
