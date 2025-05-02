@@ -1,3 +1,6 @@
+## [1.0.2] - 2025-05-02
+- header metrics addition
+
 ## [1.0.1] - 2025-04-29
 - re fix pusher
 
