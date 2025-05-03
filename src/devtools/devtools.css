@@ -5,7 +5,8 @@
     padding: 16px;
     height: calc(100vh - 100px);
     overflow-y: auto;
-    margin-top: 60px; /* Match new header height */
+    margin-top: 60px;
+    /* Match new header height */
     position: fixed;
     top: 0;
     left: 0;
@@ -59,7 +60,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: linear-gradient(to right, #2ea44f, #38b75c);
+    background: linear-gradient(to right, #444444, #333333);
+    /* Changed from green to gray gradient */
     color: white;
     padding: 8px 16px;
     border-radius: 4px;
@@ -93,7 +95,8 @@
     right: 0;
     z-index: 1000;
     background: linear-gradient(to right, #1a1a1a, #2d2d2d);
-    height: 60px; /* Reduced from 80px */
+    height: 60px;
+    /* Reduced from 80px */
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     padding: 4px;
@@ -103,7 +106,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px; /* Increased gap for spacing */
+    gap: 16px;
+    /* Increased gap for spacing */
     padding: 4px 8px;
 }
 
@@ -120,15 +124,18 @@
 }
 
 .header h1 {
-    font-size: 16px;
+    font-size: 18px;
+    /* Increased from 16px */
     font-weight: 600;
     margin: 0;
     color: #fff;
 }
 
 .version-tag {
-    font-size: 10px;
-    padding: 2px 6px;
+    font-size: 12px;
+    /* Increased from 10px */
+    padding: 3px 8px;
+    /* Increased padding */
     border-radius: 12px;
     background: linear-gradient(to right, #2ea44f, #38b75c);
     color: #fff;
@@ -173,7 +180,8 @@
 }
 
 .header-container h1 {
-    font-size: 16px;
+    font-size: 18px;
+    /* Increased from 16px */
     font-weight: 600;
     margin: 0;
     color: #fff;
@@ -181,8 +189,10 @@
 }
 
 .version-tag {
-    font-size: 10px;
-    padding: 2px 6px;
+    font-size: 12px;
+    /* Increased from 10px */
+    padding: 3px 8px;
+    /* Increased padding */
     border-radius: 12px;
     background: linear-gradient(to right, #2ea44f, #38b75c);
     color: #fff;
@@ -192,7 +202,8 @@
 .system-metrics {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px; /* Increased gap */
+    gap: 12px;
+    /* Increased gap */
     padding: 6px 12px;
     margin: 4px;
     background: rgba(0, 0, 0, 0.2);
@@ -200,24 +211,28 @@
 }
 
 .metric-item {
-    font-size: 12px; /* Increased from 8px */
+    font-size: 12px;
+    /* Increased from 8px */
     padding: 2px 8px;
     background: rgba(255, 255, 255, 0.05);
 }
 
 .metric-label {
     color: #888;
-    font-size: 12px; /* Increased size */
+    font-size: 12px;
+    /* Increased size */
 }
 
 .metric-value {
     color: #fff;
-    font-size: 12px; /* Increased size */
+    font-size: 12px;
+    /* Increased size */
     font-weight: 500;
 }
 
 .header-container button {
-    background-color: #4CAF50;
+    background-color: #444444;
+    /* Changed from green (#4CAF50) to gray */
     border: none;
     color: white;
     padding: 5px 10px;
@@ -253,36 +268,16 @@
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-#refreshButton {
-    background: linear-gradient(to right, #007BFF, #0056b3);
+    background: linear-gradient(to right, #444444, #333333);
+    /* Standard gray gradient */
     color: white;
 }
 
-#refreshButton:hover {
-    background: linear-gradient(to right, #0056b3, #004094);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
-}
-
-.export-button {
-    background: linear-gradient(to right, #28a745, #20c997);
-}
-
-.export-button:hover {
-    background: linear-gradient(to right, #20c997, #28a745);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
-}
-
-.danger-button {
-    background: linear-gradient(to right, #dc3545, #c82333);
-    color: white;
-}
-
+#refreshButton:hover,
+.export-button:hover,
 .danger-button:hover {
-    background: linear-gradient(to right, #c82333, #bd2130);
+    background: linear-gradient(to right, #555555, #444444);
+    /* Slightly lighter gray on hover */
     transform: translateY(-2px);
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
 }
@@ -295,13 +290,17 @@
 }
 
 .github-icon {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    /* Increased from 20px */
+    height: 24px;
+    /* Increased from 20px */
 }
 
 .url-container {
-    padding: 1px 2px; /* Further reduced padding */
-    margin: 1px 2px; /* Further reduced margin */
+    padding: 1px 2px;
+    /* Further reduced padding */
+    margin: 1px 2px;
+    /* Further reduced margin */
 }
 
 .server-timing-list {
@@ -366,18 +365,21 @@
 }
 
 .hamburger-menu {
-    background: transparent; /* Remove background */
+    background: transparent;
     border: none;
     color: white;
     cursor: pointer;
-    padding: 4px;
-    margin-right: 8px;
+    padding: 0;
+    /* Removed padding */
+    margin-right: 4px;
+    /* Reduced margin */
     border-radius: 4px;
     transition: background 0.2s;
 }
 
 .hamburger-menu:hover {
-    background: rgba(15, 15, 15, 0.1);
+    background: transparent;
+    /* Completely transparent even on hover */
 }
 
 .dropdown-menu {
@@ -408,10 +410,22 @@
     text-align: left;
     padding: 8px;
     border-radius: 4px;
+    background: transparent;
+    /* Ensure transparent background */
+    color: white;
+    border: none;
+    cursor: pointer;
+    /* Ensure cursor shows it's clickable */
 }
 
 .dropdown-menu button:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: transparent;
+    /* Changed from rgba(255, 255, 255, 0.1) to transparent */
+}
+
+/* Auto-hide class for JavaScript implementation */
+.dropdown-menu.auto-hide {
+    display: none;
 }
 
 /* Media queries for responsive design */
@@ -427,7 +441,7 @@
         gap: 8px;
     }
 
-    .title-group, 
+    .title-group,
     .button-group {
         width: 100%;
         justify-content: center;
@@ -441,18 +455,111 @@
 
 @media (max-width: 576px) {
     .header-container h1 {
-        font-size: 9px; /* Further reduced font size */
+        font-size: 9px;
+        /* Further reduced font size */
     }
 
     #refreshButton,
     .export-button,
     .danger-button {
-        font-size: 7px; /* Further reduced font size */
-        padding: 2px 3px; /* Further reduced button padding */
+        font-size: 7px;
+        /* Further reduced font size */
+        padding: 2px 3px;
+        /* Further reduced button padding */
     }
 }
 
 .panel-container {
     padding-top: 16px;
     /* Add padding to prevent overlap with the header */
+}
+
+/* Release Notes Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: #2d2d2d;
+    border-radius: 8px;
+    padding: 20px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    color: #aaa;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.modal-close:hover {
+    color: #fff;
+}
+
+.release-notes-content h3 {
+    color: #fff;
+    font-size: 16px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.release-notes-content ul {
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+.release-notes-content li {
+    color: #ddd;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.release-notes-content .feature {
+    color: #8bc34a;
+}
+
+.release-notes-content .bugfix {
+    color: #ff9800;
+}
+
+.release-notes-content .improvement {
+    color: #03a9f4;
 }

@@ -1,10 +1,12 @@
 class PerformanceMetricsDevTools {
   constructor() {
+    console.log("Initializing PerformanceMetricsDevTools..."); // Debug log
     this.currentTabId = null;
     this.port = null;
     this.panels = {};
     this.requestsCount = 0;
     this.lastRequestTime = Date.now();
+    this.metricsProvider = new MetricsProvider();
     this.init();
     this.updatePageUrl();
     this.refresh();
@@ -13,6 +15,8 @@ class PerformanceMetricsDevTools {
     this.initRequestsCounter();
     this.setupClearStorageButton();
     this.setupExportButton();
+    // Temporarily disabled chatbot
+    // this.initChatBot();
   }
 
   async refresh() {
@@ -310,8 +314,10 @@ class PerformanceMetricsDevTools {
   }
 
   updatePanels(data) {
+    console.log("Updating panels with data:", data); // Debug log
+
     try {
-      console.log('Received metrics update:', data); // Debug log
+      this.metricsProvider.updateMetrics(data);
 
       if (data.fps && this.panels.fps) {
         this.panels.fps.update(data.fps);
@@ -525,6 +531,22 @@ class PerformanceMetricsDevTools {
       this.lastRequestTime = now;
     }, 1000);
   }
+
+  // Temporarily disabled chatbot
+  /*
+  initChatBot() {
+    console.log("Initializing ChatBotPanel...");
+    const chatContainerId = "chatbot-container";
+    let chatContainer = document.getElementById(chatContainerId);
+    if (!chatContainer) {
+      chatContainer = document.createElement("div");
+      chatContainer.id = chatContainerId;
+      document.body.appendChild(chatContainer);
+    }
+    this.chatBot = new ChatBotPanel(chatContainerId, this.metricsProvider);
+    console.log("ChatBotPanel initialized successfully.");
+  }
+  */
 }
 
 // Add this near other performance measurements
@@ -697,3 +719,95 @@ class CPUPanel {
 
 // Initialize the devtools
 new PerformanceMetricsDevTools();
+
+// Wait for DOM to load
+document.addEventListener('DOMContentLoaded', function() {
+    // Release notes modal functionality
+    const releaseNotesButton = document.getElementById('releaseNotesButton');
+    if (releaseNotesButton) {
+        releaseNotesButton.addEventListener('click', showReleaseNotes);
+    }
+    
+    function showReleaseNotes() {
+        // Create modal if it doesn't exist
+        let modalOverlay = document.querySelector('.modal-overlay');
+        if (!modalOverlay) {
+            modalOverlay = document.createElement('div');
+            modalOverlay.className = 'modal-overlay';
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+            
+            const modalHeader = document.createElement('div');
+            modalHeader.className = 'modal-header';
+            
+            const modalTitle = document.createElement('h2');
+            modalTitle.textContent = 'Release Notes';
+            
+            const closeButton = document.createElement('button');
+            closeButton.className = 'modal-close';
+            closeButton.innerHTML = '&times;';
+            closeButton.addEventListener('click', () => {
+                modalOverlay.classList.remove('active');
+            });
+            
+            modalHeader.appendChild(modalTitle);
+            modalHeader.appendChild(closeButton);
+            
+            const releaseNotesContent = document.createElement('div');
+            releaseNotesContent.className = 'release-notes-content';
+            
+            releaseNotesContent.innerHTML = `
+                <h3>Version 1.0.3 (Current)</h3>
+                <ul>
+                    <li class="feature">Added server timing metrics visualization</li>
+                    <li class="improvement">Improved memory usage tracking accuracy</li>
+                    <li class="bugfix">Fixed network bandwidth calculation issues</li>
+                    <li class="improvement">Enhanced CPU utilization measurements</li>
+                    <li class="feature">Added export functionality for metrics data</li>
+                </ul>
+                
+                <h3>Version 1.0.2</h3>
+                <ul>
+                    <li class="feature">Added WebSocket connection tracking</li>
+                    <li class="improvement">Improved UI responsiveness</li>
+                    <li class="bugfix">Fixed FPS calculation during page idle</li>
+                    <li class="feature">Added storage usage monitoring</li>
+                </ul>
+                
+                <h3>Version 1.0.1</h3>
+                <ul>
+                    <li class="feature">Added Web Vitals metrics</li>
+                    <li class="improvement">Enhanced DOM metrics panel</li>
+                    <li class="bugfix">Fixed memory leak in performance monitoring</li>
+                </ul>
+                
+                <h3>Version 1.0.0</h3>
+                <ul>
+                    <li class="feature">Initial release with core performance metrics</li>
+                    <li class="feature">Real-time FPS monitoring</li>
+                    <li class="feature">Memory usage tracking</li>
+                    <li class="feature">Network requests monitoring</li>
+                </ul>
+            `;
+            
+            modalContent.appendChild(modalHeader);
+            modalContent.appendChild(releaseNotesContent);
+            modalOverlay.appendChild(modalContent);
+            document.body.appendChild(modalOverlay);
+            
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === modalOverlay) {
+                    modalOverlay.classList.remove('active');
+                }
+            });
+        }
+        
+        modalOverlay.classList.add('active');
+        
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        if (dropdownMenu) {
+            dropdownMenu.classList.remove('active');
+        }
+    }
+});
