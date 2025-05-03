@@ -10,20 +10,22 @@ class ServerTimingPanel extends BasePanel {
             <div class="panel-header">
                 <h3>Server Timing</h3>
             </div>
-            <div class="server-timing-list">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Metric</th>
-                            <th>Duration</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody id="serverTimingList"></tbody>
-                </table>
-            </div>
-            <div class="chart-container">
-                <canvas></canvas>
+            <div style="display: flex; flex-direction: column; height: calc(100% - 40px);">
+                <div class="server-timing-list">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Duration</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serverTimingList"></tbody>
+                    </table>
+                </div>
+                <div class="chart-container" style="flex: 1; margin-top: 8px;">
+                    <canvas></canvas>
+                </div>
             </div>
         `;
 

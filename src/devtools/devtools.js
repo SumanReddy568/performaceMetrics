@@ -570,6 +570,18 @@ function resetMeasurements() {
   interactionData = { clicks: 0, scrolls: 0, keypresses: 0 };
 }
 
+// Add dropdown menu handling
+document.getElementById('menuButton').addEventListener('click', function(e) {
+    e.stopPropagation();
+    document.getElementById('dropdownMenu').classList.toggle('active');
+});
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.menu-wrapper')) {
+        document.getElementById('dropdownMenu').classList.remove('active');
+    }
+});
+
 // Panel Classes
 class FPSPanel {
   constructor(elementId) {

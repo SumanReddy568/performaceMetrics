@@ -4,277 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Performance Metrics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="devtools.css">
   <link rel="stylesheet" href="../../assets/styles/global.css">
-  <style>
-    .header {
-      background: linear-gradient(to right, #1a1a1a, #2d2d2d);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .header-container {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 8px 16px;
-    }
-
-    .header-container h1 {
-      font-size: 18px;
-      font-weight: 600;
-      margin: 0;
-      color: #fff;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    }
-
-    .version-tag {
-      font-size: 12px;
-      color: #ffffff;
-      background: linear-gradient(to right, #2ea44f, #38b75c);
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-weight: 500;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    }
-
-    .github-link {
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-      transition: opacity 0.2s;
-    }
-
-    .github-link:hover {
-      opacity: 0.8;
-    }
-
-    .github-icon {
-      width: 24px;
-      height: 24px;
-      margin-left: 8px;
-    }
-
-    .panel.disabled,
-    .panel.panel-no-data,
-    .panel.panel-coming-soon {
-      position: relative;
-      pointer-events: none;
-      opacity: 0.7;
-    }
-
-    .panel.panel-coming-soon::before {
-      content: "Coming in v1.0.3";
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 4px;
-      z-index: 10;
-      font-size: 14px;
-    }
-
-    .panel.panel-no-data::before {
-      content: "No data available";
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 4px;
-      z-index: 10;
-      font-size: 14px;
-    }
-
-    .refresh-notice {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: #4CAF50;
-      color: white;
-      text-align: center;
-      padding: 8px;
-      font-size: 14px;
-      animation: fadeOut 3s forwards;
-      z-index: 1000;
-    }
-
-    @keyframes fadeOut {
-      0% {
-        opacity: 1;
-      }
-
-      70% {
-        opacity: 1;
-      }
-
-      100% {
-        opacity: 0;
-        visibility: hidden;
-      }
-    }
-
-    .system-metrics {
-      display: flex;
-      gap: 16px;
-      padding: 8px 16px;
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 6px;
-      margin: 8px 16px;
-      flex-wrap: wrap;
-    }
-
-    .metric-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      padding: 2px 8px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.03);
-    }
-
-    .metric-label {
-      color: #888;
-    }
-
-    .metric-value {
-      font-weight: 500;
-      color: #fff;
-    }
-
-    .metric-indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      margin-right: 4px;
-    }
-
-    .indicator-good {
-      background: #4CAF50;
-    }
-
-    .indicator-warning {
-      background: #FFC107;
-    }
-
-    .indicator-bad {
-      background: #F44336;
-    }
-
-    .url-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      padding: 8px 12px;
-      border-radius: 6px;
-      margin: 8px 16px;
-      max-width: 100%;
-      overflow: hidden;
-    }
-
-    .url-label {
-      flex-shrink: 0;
-      color: #888;
-      font-size: 13px;
-    }
-
-    .url-value {
-      color: #fff;
-      font-size: 13px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: calc(100% - 100px);
-      display: inline-block;
-    }
-
-    .url-value:hover {
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    #refreshButton {
-      background: linear-gradient(to right, #007BFF, #0056b3);
-      color: white;
-      border: none;
-      padding: 4px 12px;
-      border-radius: 4px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-      margin-left: auto;
-    }
-
-    #refreshButton:hover {
-      background: linear-gradient(to right, #0056b3, #004094);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    #refreshButton:active {
-      transform: scale(0.95);
-    }
-
-    .danger-button {
-      background: linear-gradient(to right, #dc3545, #c82333);
-      color: white;
-      border: none;
-      padding: 4px 12px;
-      border-radius: 4px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    }
-
-    .danger-button:hover {
-      background: linear-gradient(to right, #c82333, #bd2130);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    .danger-button:active {
-      transform: scale(0.95);
-    }
-
-    .export-button {
-      background: linear-gradient(to right, #28a745, #20c997);
-      color: white;
-      border: none;
-      padding: 4px 12px;
-      border-radius: 4px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    }
-
-    .export-button:hover {
-      background: linear-gradient(to right, #20c997, #28a745);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    .export-button:active {
-      transform: scale(0.95);
-    }
-
-    .panel-container {
-      padding-top: 16px;
-      /* Add padding to prevent overlap with the header */
-    }
-  </style>
 </head>
 
 <body>
@@ -282,18 +14,46 @@
   <div class="layout-wrapper">
     <header class="header">
       <div class="header-container">
-        <h1>Performance Metrics</h1>
-        <span class="version-tag" id="app-version">v1.0.3</span>
-        <a href="https://github.com/SumanReddy568/performaceMetrics" target="_blank" class="github-link"
-          title="View on GitHub">
+        <div class="header-left">
+          <div class="menu-wrapper">
+            <button class="hamburger-menu" id="menuButton">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2">
+                <path d="M3 12h18M3 6h18M3 18h18" />
+              </svg>
+            </button>
+            <div class="dropdown-menu" id="dropdownMenu">
+              <button id="refreshButton">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2">
+                  <path d="M23 4v6h-6M1 20v-6h6"></path>
+                  <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"></path>
+                </svg>
+                <span>Refresh</span>
+              </button>
+              <button id="exportButton" class="export-button">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                  <path d="M7 10l5 5 5-5"></path>
+                  <path d="M12 15V3"></path>
+                </svg>
+                <span>Export</span>
+              </button>
+              <button id="clearStorageButton" class="danger-button">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                </svg>
+                <span>Clear</span>
+              </button>
+            </div>
+          </div>
+          <h1>Performance Metrics</h1>
+          <span class="version-tag" id="app-version">v1.0.3</span>
+        </div>
+        <a href="https://github.com/SumanReddy568/performaceMetrics" target="_blank" class="github-link">
           <svg class="github-icon" viewBox="0 0 16 16" fill="currentColor">
             <path
               d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
           </svg>
         </a>
-        <button id="refreshButton">Refresh</button>
-        <button id="exportButton" class="export-button">Export CSV</button>
-        <button id="clearStorageButton" class="danger-button">Clear Storage</button>
       </div>
       <div class="url-container">
         <span class="url-label">Monitoring:</span>
@@ -375,7 +135,7 @@
   <script src="/src/utils/storage.js"></script>
   <script src="/src/utils/chartRenderer.js"></script>
   <script src="/src/utils/performanceCollector.js"></script>
-  <script src="/src/panels/serverTimingPanel/serverTimingPanel.js"></script>  
+  <script src="/src/panels/serverTimingPanel/serverTimingPanel.js"></script>
   <script src="/src/panels/websocketPanel/websocketPanel.js"></script>
   <script src="/src/panels/performanceMetricsPanel/performanceMetricsPanel.js"></script>
   <script src="/src/utils/metricsExporter.js"></script>
