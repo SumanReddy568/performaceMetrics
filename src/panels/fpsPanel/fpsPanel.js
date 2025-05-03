@@ -1,6 +1,6 @@
-class FPSPanel {
+class FPSPanel extends BasePanel {
   constructor(containerId) {
-    this.container = document.getElementById(containerId);
+    super(containerId);
     this.chart = null;
     this.data = [];
     this.maxDataPoints = 60; // Keep 1 minute of data at 1-second intervals
@@ -70,6 +70,10 @@ class FPSPanel {
   }
 
   update(dataPoint) {
+    if (!dataPoint || !dataPoint.value) return;
+
+    this.updateLastActivity();
+
     // Add new data point
     this.data.push(dataPoint);
 
@@ -91,6 +95,7 @@ class FPSPanel {
   }
 
   destroy() {
+    super.destroy();
     try {
       if (this.chart) {
         this.chart.destroy();

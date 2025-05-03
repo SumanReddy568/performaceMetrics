@@ -1,5 +1,6 @@
-class PageLoadPanel {
+class PageLoadPanel extends BasePanel {
   constructor(containerId) {
+    super(containerId);
     this.container = document.getElementById(containerId);
     this.data = [];
     this.maxDataPoints = 10;
@@ -58,6 +59,9 @@ class PageLoadPanel {
   }
 
   update(data) {
+    if (!data) return;
+    this.updateLastActivity();
+
     this.data.push(data);
     if (this.data.length > this.maxDataPoints) {
       this.data.shift();
@@ -75,6 +79,7 @@ class PageLoadPanel {
   }
 
   destroy() {
+    super.destroy();
     try {
       if (this.chart) {
         this.chart.destroy();

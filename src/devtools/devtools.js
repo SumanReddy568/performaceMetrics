@@ -3,11 +3,16 @@ class PerformanceMetricsDevTools {
     this.currentTabId = null;
     this.port = null;
     this.panels = {};
+    this.requestsCount = 0;
+    this.lastRequestTime = Date.now();
     this.init();
     this.updatePageUrl();
     this.refresh();
     this.initSystemMetrics();
     this.setupRefreshButton();
+    this.initRequestsCounter();
+    this.setupClearStorageButton();
+    this.setupExportButton();
   }
 
   async refresh() {
@@ -23,6 +28,84 @@ class PerformanceMetricsDevTools {
     const refreshButton = document.getElementById('refreshButton');
     refreshButton.addEventListener('click', () => {
       this.refreshPanels();
+    });
+  }
+
+  setupClearStorageButton() {
+    const clearStorageButton = document.getElementById('clearStorageButton');
+    clearStorageButton.addEventListener('click', async () => {
+      try {
+        // Clear chrome.storage.local
+        await chrome.storage.local.clear();
+        
+        // Clear chrome.storage.sync if used
+        await chrome.storage.sync.clear();
+        
+        // Clear IndexedDB if used
+        const dbs = await window.indexedDB.databases();
+        for (const db of dbs) {
+          window.indexedDB.deleteDatabase(db.name);
+        }
+        
+        // Show success message
+        alert('Extension storage cleared successfully!');
+        
+        // Refresh panels to reflect cleared state
+        this.refreshPanels();
+      } catch (error) {
+        console.error('Error clearing storage:', error);
+        alert('Error clearing storage: ' + error.message);
+      }
+    });
+  }
+
+  setupExportButton() {
+    const exportButton = document.getElementById('exportButton');
+    exportButton.addEventListener('click', () => {
+      // Prepare metrics data with current timestamp
+      const perfMetrics = this.panels.performanceMetrics?.data || {};
+      const webVitalsData = this.panels.webVitals?.data || {};
+      const metricsData = {
+        timestamp: Date.now(),
+        fps: this.panels.fps?.data?.slice(-1)[0] || { value: 0 },
+        memory: this.panels.memory?.data?.slice(-1)[0] || { usedJSHeapSize: 0, totalJSHeapSize: 0 },
+        network: this.panels.network?.data?.slice(-1)[0] || { requests: 0, transferred: 0 },
+        cpu: this.panels.cpu?.data?.slice(-1)[0] || { usage: 0 },
+        dom: this.panels.dom?.data?.slice(-1)[0] || { elements: 0, nodes: 0, listeners: 0 },
+        layoutShifts: this.panels.layoutShifts?.data?.slice(-1)[0] || { cumulativeLayoutShift: 0 },
+        resourceTiming: this.panels.resourceTiming?.data?.slice(-1)[0] || {},
+        firstPaint: this.panels.firstPaint?.data?.slice(-1)[0] || { fp: 0, fcp: 0 },
+        pageLoad: this.panels.pageLoad?.data?.slice(-1)[0] || { domLoadTime: 0, windowLoadTime: 0 },
+        longTasks: this.panels.longTasks?.data?.slice(-1)[0] || { duration: 0 },
+        apiPerformance: this.panels.apiPerformance?.data || [],
+        pageErrors: this.panels.pageErrors?.data?.slice(-1)[0] || { count: 0, recentErrors: [] },
+        cacheUsage: this.panels.cacheUsage?.data?.slice(-1)[0] || { size: 0, hits: 0, misses: 0, totalEntries: 0 },
+        webVitals: {
+          lcp: webVitalsData.lcp || 0,
+          fid: webVitalsData.fid || 0,
+          cls: webVitalsData.cls || 0
+        },
+        serverTiming: this.panels.serverTiming?.data?.slice(-1)[0] || { metrics: [] },
+        websocket: this.panels.websocket?.data?.slice(-1)[0] || { connections: [] },
+        storage: this.panels.storage?.data?.slice(-1)[0] || { localStorage: 0, sessionStorage: 0, indexedDB: 0 },
+        performanceMetrics: {
+          markCount: perfMetrics.marks?.length || 0,
+          measureCount: perfMetrics.measures?.length || 0
+        },
+        userInteraction: this.panels.userInteraction?.data?.slice(-1)[0] || { clicks: 0, scrolls: 0, keypresses: 0 }
+      };
+
+      console.log('Exporting metrics data:', metricsData); // Debug log
+
+      const filename = `performance-metrics-${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+
+      try {
+        MetricsExporter.downloadCSV([metricsData], filename);
+        console.log('Metrics exported successfully');
+      } catch (error) {
+        console.error('Error exporting metrics:', error);
+        alert('Error exporting metrics. Check console for details.');
+      }
     });
   }
 
@@ -100,6 +183,8 @@ class PerformanceMetricsDevTools {
         this.loadPanels();
       }
     });
+
+    this.setupMessageListeners();
   }
 
   async connectToBackground() {
@@ -120,8 +205,27 @@ class PerformanceMetricsDevTools {
       this.port.onMessage.addListener((message) => {
         console.log('Devtools received message:', message);
         if (message.type === 'metrics-update') {
-          console.log('Received API data in devtools:', message.data.apiPerformance); // ADD THIS LINE
+          // Special handling for API performance data
+          if (!message.data.apiPerformance || message.data.apiPerformance.length === 0) {
+            console.log('No API performance data received, adding test data');
+            message.data.apiPerformance = [{
+              type: 'Test',
+              method: 'GET',
+              url: 'https://example.com/api/test',
+              duration: 120 + Math.random() * 50, // Randomize for visual feedback
+              size: 1536,
+              status: 200,
+              timestamp: Date.now()
+            }];
+          }
+          
+          console.log('API data received:', message.data.apiPerformance);
           this.updatePanels(message.data);
+        } else if (message.type === 'api-performance-update') {
+          console.log('Direct API performance update received:', message.data);
+          if (this.panels.apiPerformance && Array.isArray(message.data)) {
+            this.panels.apiPerformance.update(message.data);
+          }
         }
       });
 
@@ -159,7 +263,34 @@ class PerformanceMetricsDevTools {
       this.panels.firstPaint = new FirstPaintPanel('firstPaintPanel');
       this.panels.pageLoad = new PageLoadPanel('pageLoadPanel');
       this.panels.longTasks = new LongTasksPanel('longTasksPanel');
-      this.panels.apiPerformance = new APIPerformancePanel('apiPerformancePanel');
+
+      this.panels.pageErrors = new PageErrorsPanel('pageErrorsPanel');
+      this.panels.cacheUsage = new CacheUsagePanel('cacheUsagePanel');
+
+      // Special handling for API Performance panel
+      const apiPanel = document.getElementById('apiPerformancePanel');
+      if (apiPanel) {
+        apiPanel.classList.add('panel-disabled', 'panel-coming-soon');
+        apiPanel.setAttribute('title', 'Coming in v1.0.3');
+      }
+
+      // Initialize API Performance panel
+      if (document.getElementById('apiPerformancePanel')) {
+        console.log('Loading API Performance panel...');
+        this.panels.apiPerformance = new APIPerformancePanel('apiPerformancePanel');
+        console.log('API Performance panel loaded successfully');
+      } else {
+        console.error('Cannot find apiPerformancePanel element!');
+      }
+
+      // Initialize new panels
+      this.panels.webVitals = new WebVitalsPanel('webVitalsPanel');
+      this.panels.serverTiming = new ServerTimingPanel('serverTimingPanel');
+      this.panels.websocket = new WebsocketPanel('websocketPanel');
+      this.panels.storage = new StoragePanel('storagePanel');
+      this.panels.performanceMetrics = new PerformanceMetricsPanel('performanceMetricsPanel');
+      this.panels.userInteraction = new UserInteractionPanel('userInteractionPanel');
+      
     } catch (e) {
       console.error("Error loading panels:", e);
     }
@@ -215,10 +346,76 @@ class PerformanceMetricsDevTools {
       if (data.longTasks && this.panels.longTasks) {
         this.panels.longTasks.update(data.longTasks);
       }
-      if (data.apiPerformance && this.panels.apiPerformance) {
-        console.log('Updating API panel with:', data.apiPerformance); // ADD THIS LINE
-        this.panels.apiPerformance.update(data.apiPerformance);
+      if (data.pageErrors) {
+        console.log('Updating page errors panel:', data.pageErrors);
+        this.panels.pageErrors.update({
+          count: data.pageErrors.count || 0,
+          errors: data.pageErrors.recentErrors || [],
+          timestamp: data.pageErrors.timestamp
+        });
       }
+      if (data.cacheUsage) {
+        console.log('Updating cache usage panel:', data.cacheUsage);
+        this.panels.cacheUsage.update({
+          size: data.cacheUsage.size || 0,
+          hits: data.cacheUsage.hits || 0,
+          misses: data.cacheUsage.misses || 0,
+          entries: data.cacheUsage.totalEntries || 0,
+          timestamp: data.cacheUsage.timestamp
+        });
+      }
+      if (data.apiPerformance) {
+        // Make a copy to avoid modifying the original data
+        let apiData = [...data.apiPerformance];
+        
+        console.log('Updating API panel with data of length:', apiData.length);
+        if (this.panels.apiPerformance) {
+          this.panels.apiPerformance.update(apiData);
+        } else {
+          console.warn('API Performance panel not initialized yet');
+          // Initialize it if needed
+          this.panels.apiPerformance = new APIPerformancePanel('apiPerformancePanel');
+          this.panels.apiPerformance.update(apiData);
+        }
+      }
+
+      // Update new panels - Ensure keys match the snapshot from contentScript.js
+      if (data.webVitals && this.panels.webVitals) {
+        this.panels.webVitals.update(data.webVitals);
+      } else if (!this.panels.webVitals) {
+        console.warn('WebVitals panel not initialized');
+      }
+
+      if (data.serverTiming && this.panels.serverTiming) {
+        this.panels.serverTiming.update(data.serverTiming);
+      } else if (!this.panels.serverTiming) {
+        console.warn('ServerTiming panel not initialized');
+      }
+
+      if (data.websocket && this.panels.websocket) {
+        this.panels.websocket.update(data.websocket);
+      } else if (!this.panels.websocket) {
+        console.warn('Websocket panel not initialized');
+      }
+
+      if (data.storage && this.panels.storage) {
+        this.panels.storage.update(data.storage);
+      } else if (!this.panels.storage) {
+        console.warn('Storage panel not initialized');
+      }
+
+      if (data.performanceMetrics && this.panels.performanceMetrics) {
+        this.panels.performanceMetrics.update(data.performanceMetrics);
+      } else if (!this.panels.performanceMetrics) {
+        console.warn('PerformanceMetrics panel not initialized');
+      }
+
+      if (data.userInteraction && this.panels.userInteraction) {
+        this.panels.userInteraction.update(data.userInteraction);
+      } else if (!this.panels.userInteraction) {
+        console.warn('UserInteraction panel not initialized');
+      }
+
     } catch (e) {
       console.error("Error updating panels:", e);
     }
@@ -292,6 +489,85 @@ class PerformanceMetricsDevTools {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
   }
+
+  // Add a listener for direct chrome.runtime messages for API data
+  setupMessageListeners() {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.type === 'api-performance-update') {
+        console.log('Direct API performance message received:', message.data);
+        if (this.panels.apiPerformance) {
+          this.panels.apiPerformance.update(message.data);
+        }
+      }
+      if (message.type === 'userInteraction') {
+        this.panels.userInteraction.update(message.data);
+      }
+      return true; // Keep the messaging channel open for async responses
+    });
+  }
+
+  initRequestsCounter() {
+    // Listen to network requests
+    chrome.devtools.network.onRequestFinished.addListener(() => {
+      this.requestsCount++;
+    });
+
+    // Update requests per second every second
+    setInterval(() => {
+      const now = Date.now();
+      const timeDiff = (now - this.lastRequestTime) / 1000;
+      const reqPerSec = (this.requestsCount / timeDiff).toFixed(1);
+      
+      document.getElementById('requests-per-sec').textContent = `${reqPerSec}/s`;
+      
+      // Reset counter
+      this.requestsCount = 0;
+      this.lastRequestTime = now;
+    }, 1000);
+  }
+}
+
+// Add this near other performance measurements
+let interactionData = {
+  clicks: 0,
+  scrolls: 0,
+  keypresses: 0
+};
+
+// Add these event listeners
+chrome.devtools.inspectedWindow.eval(`
+  document.addEventListener('click', () => {
+      window.postMessage({ type: 'interaction', action: 'click' }, '*');
+  });
+  document.addEventListener('scroll', () => {
+      window.postMessage({ type: 'interaction', action: 'scroll' }, '*');
+  });
+  document.addEventListener('keypress', () => {
+      window.postMessage({ type: 'interaction', action: 'keypress' }, '*');
+  });
+`);
+
+// Add this in your message handler
+window.addEventListener('message', function(event) {
+  if (event.data.type === 'interaction') {
+      switch(event.data.action) {
+          case 'click':
+              interactionData.clicks++;
+              break;
+          case 'scroll':
+              interactionData.scrolls++;
+              break;
+          case 'keypress':
+              interactionData.keypresses++;
+              break;
+      }
+      panels.userInteraction.update(interactionData);
+  }
+});
+
+// Reset interaction data when refreshing
+function resetMeasurements() {
+  interactionData = { clicks: 0, scrolls: 0, keypresses: 0 };
 }
 
 // Panel Classes

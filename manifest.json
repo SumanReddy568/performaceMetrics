@@ -46,10 +46,20 @@
         "<all_urls>"
       ],
       "js": [
+        "lib/web-vitals.js",
         "/src/content/contentScript.js"
       ],
       "run_at": "document_start",
       "all_frames": false
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/content/interactions.js"
+      ],
+      "run_at": "document_start"
     }
   ]
 }

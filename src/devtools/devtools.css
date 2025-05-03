@@ -3,19 +3,70 @@
     grid-template-columns: repeat(2, 1fr);
     grid-gap: 16px;
     padding: 16px;
-    height: calc(100vh - 110px); /* Adjusted height */
-    overflow: auto; /* Add scroll if content overflows */
+    height: calc(100vh - 200px); /* Adjusted height */
+    overflow-y: auto;
+    margin-top: 200px; /* Fixed margin for header space */
+    position: fixed; /* Fix the position */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .panel {
     background: var(--bg-secondary);
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 16px;
     display: flex;
     flex-direction: column;
     min-height: 300px;
+    position: relative;
+    /* Ensure proper stacking */
+    z-index: 1;
     color: var(--text-primary);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.panel.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.panel-disabled {
+    position: relative;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.panel-disabled.panel-no-data::before {
+    content: "No Data Available";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    z-index: 10;
+    font-size: 14px;
+}
+
+.panel-disabled.panel-coming-soon::before {
+    content: "Coming in v1.0.4";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(to right, #2ea44f, #38b75c);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    z-index: 10;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .panel-header {
@@ -37,9 +88,24 @@
 }
 
 .header {
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    padding: 12px 16px;
+    position: fixed; /* Fix the header position */
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: linear-gradient(to right, #1a1a1a, #2d2d2d);
+    height: 200px; /* Fixed height for header */
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    backdrop-filter: blur(8px);
+    z-index: -1;
 }
 
 #currentUrl {
@@ -59,8 +125,18 @@
     color: var(--text-primary);
 }
 
+.header-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 8px;
+}
+
 .header-container button {
-    background-color: #4CAF50; /* Green */
+    background-color: #4CAF50;
+    /* Green */
     border: none;
     color: white;
     padding: 5px 10px;
@@ -70,4 +146,74 @@
     font-size: 14px;
     cursor: pointer;
     border-radius: 4px;
+}
+
+.system-metrics {
+    position: relative;
+    z-index: 1;
+}
+
+#refreshButton {
+    transition: all 0.2s ease-in-out;
+}
+
+#refreshButton:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#refreshButton,
+.export-button,
+.danger-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#refreshButton {
+    background: linear-gradient(to right, #007BFF, #0056b3);
+    color: white;
+}
+
+#refreshButton:hover {
+    background: linear-gradient(to right, #0056b3, #004094);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+.export-button {
+    background: linear-gradient(to right, #28a745, #20c997);
+    color: white;
+}
+
+.export-button:hover {
+    background: linear-gradient(to right, #20c997, #28a745);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+.danger-button {
+    background: linear-gradient(to right, #dc3545, #c82333);
+    color: white;
+}
+
+.danger-button:hover {
+    background: linear-gradient(to right, #c82333, #bd2130);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+#refreshButton:active,
+.export-button:active,
+.danger-button:active {
+    transform: scale(0.95);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
 }

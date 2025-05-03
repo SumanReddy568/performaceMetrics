@@ -1,5 +1,6 @@
-class MemoryPanel {
+class MemoryPanel extends BasePanel {
   constructor(containerId) {
+    super(containerId);
     this.container = document.getElementById(containerId);
     this.chart = null;
     this.data = [];
@@ -80,6 +81,9 @@ class MemoryPanel {
   }
 
   update(dataPoint) {
+    if (!dataPoint) return;
+    this.updateLastActivity();
+
     this.data.push(dataPoint);
 
     if (this.data.length > this.maxDataPoints) {
@@ -100,6 +104,7 @@ class MemoryPanel {
   }
 
   destroy() {
+    super.destroy();
     try {
       if (this.chart) {
         this.chart.destroy();

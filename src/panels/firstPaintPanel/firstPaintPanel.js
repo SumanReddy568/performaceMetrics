@@ -1,5 +1,6 @@
-class FirstPaintPanel {
+class FirstPaintPanel extends BasePanel {
   constructor(containerId) {
+    super(containerId);
     this.container = document.getElementById(containerId);
     this.data = [];
     this.maxDataPoints = 10;
@@ -56,6 +57,8 @@ class FirstPaintPanel {
   }
 
   update(data) {
+    if (!data) return;
+    this.updateLastActivity();
     document.getElementById('firstPaint').textContent = 
       `FP: ${data.fp.toFixed(1)}ms`;
     document.getElementById('firstContentfulPaint').textContent = 
@@ -66,6 +69,7 @@ class FirstPaintPanel {
   }
 
   destroy() {
+    super.destroy();
     try {
       if (this.chart) {
         this.chart.destroy();

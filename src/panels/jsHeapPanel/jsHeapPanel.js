@@ -1,5 +1,6 @@
-class JSHeapPanel {
+class JSHeapPanel extends BasePanel {
   constructor(containerId) {
+    super(containerId);
     this.container = document.getElementById(containerId);
     this.chart = null;
     this.data = [];
@@ -59,6 +60,7 @@ class JSHeapPanel {
 
   update(data) {
     if (!data) return;
+    this.updateLastActivity();
 
     this.data.push(data);
     if (this.data.length > this.maxDataPoints) {
@@ -78,6 +80,7 @@ class JSHeapPanel {
   }
 
   destroy() {
+    super.destroy();
     try {
       if (this.chart) {
         this.chart.destroy();

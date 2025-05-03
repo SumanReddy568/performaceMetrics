@@ -1,5 +1,6 @@
-class DOMPanel {
+class DOMPanel extends BasePanel {
   constructor(containerId) {
+    super(containerId);
     this.container = document.getElementById(containerId);
     this.data = [];
     this.maxDataPoints = 60;
@@ -66,7 +67,8 @@ class DOMPanel {
 
   update(data) {
     if (!data) return;
-    
+    this.updateLastActivity();
+
     this.data.push(data);
     if (this.data.length > this.maxDataPoints) {
       this.data.shift();
@@ -90,6 +92,7 @@ class DOMPanel {
   }
 
   destroy() {
+    super.destroy();
     try {
       if (this.chart) {
         this.chart.destroy();

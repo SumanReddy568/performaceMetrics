@@ -1,5 +1,6 @@
-class LongTasksPanel {
+class LongTasksPanel extends BasePanel {
   constructor(containerId) {
+    super(containerId);
     this.container = document.getElementById(containerId);
     this.data = [];
     this.maxDataPoints = 20;
@@ -51,6 +52,7 @@ class LongTasksPanel {
 
   update(data) {
     if (!data || (!data.duration && !Array.isArray(data))) return;
+    this.updateLastActivity();
     
     // Handle both single items and arrays
     const items = Array.isArray(data) ? data : [data];
@@ -79,6 +81,7 @@ class LongTasksPanel {
   }
 
   destroy() {
+    super.destroy();
     try {
       if (this.chart) {
         this.chart.destroy();

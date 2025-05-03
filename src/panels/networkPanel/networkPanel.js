@@ -1,5 +1,6 @@
-class NetworkPanel {
+class NetworkPanel extends BasePanel {
   constructor(elementId) {
+    super(elementId);
     this.container = document.getElementById(elementId);
     this.data = [];
     this.maxDataPoints = 60;
@@ -85,6 +86,7 @@ class NetworkPanel {
 
   update(dataPoint) {
     if (!dataPoint) return;
+    this.updateLastActivity();
 
     this.data.push(dataPoint);
     if (this.data.length > this.maxDataPoints) {
@@ -117,6 +119,7 @@ class NetworkPanel {
   }
 
   destroy() {
+    super.destroy();
     try {
       if (this.chart) {
         this.chart.destroy();

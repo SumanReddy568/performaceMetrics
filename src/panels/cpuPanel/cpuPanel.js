@@ -1,5 +1,6 @@
-class CPUPanel {
+class CPUPanel extends BasePanel {
   constructor(containerId) {
+    super(containerId);
     this.container = document.getElementById(containerId);
     this.chart = null;
     this.data = [];
@@ -55,6 +56,9 @@ class CPUPanel {
   }
 
   update(dataPoint) {
+    if (!dataPoint) return;
+    this.updateLastActivity();
+
     this.data.push(dataPoint);
     if (this.data.length > this.maxDataPoints) {
       this.data.shift();
@@ -71,6 +75,7 @@ class CPUPanel {
   }
 
   destroy() {
+    super.destroy();
     try {
       if (this.chart) {
         this.chart.destroy();
