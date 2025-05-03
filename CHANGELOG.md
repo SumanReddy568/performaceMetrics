@@ -1,4 +1,7 @@
 ## [1.0.3] - 2025-05-03
+- new fix for lower resoloution
+
+## [1.0.3] - 2025-05-03
 - New pannels and ui enhancements
 
 ## [1.0.2] - 2025-05-02
