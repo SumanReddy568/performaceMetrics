@@ -1,4 +1,7 @@
 ## [1.0.3] - 2025-05-03
+- new fix with diabled chatbot
+
+## [1.0.3] - 2025-05-03
 - new fix for lower resoloution
 
 ## [1.0.3] - 2025-05-03
