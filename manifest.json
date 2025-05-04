@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Performance Metrics",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Advanced performance metrics dashboard for web pages",
   "devtools_page": "/src/devtools/devtools.html",
   "icons": {
