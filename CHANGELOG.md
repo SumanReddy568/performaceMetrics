@@ -1,3 +1,6 @@
+## [1.0.3] - 2025-05-04
+- chatbot reenablement
+
 ## [1.0.3] - 2025-05-03
 - new fix with diabled chatbot
 
