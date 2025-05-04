@@ -12,9 +12,18 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    border: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
     z-index: 9999;
+}
+
+.floating-chat-button svg {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
 }
 
 .floating-chat-button:hover {
@@ -255,4 +264,37 @@
 
 .chat-message li {
     margin-bottom: 3px;
+}
+
+/* Metrics specific styling */
+.chat-message.metrics {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 12px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    color: #000000; /* Ensure text is black */
+}
+
+.chat-message.bot.metrics {
+    background-color: white;
+    color: #000000;
+    max-width: 85%;
+    font-size: 13px;
+    line-height: 1.5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.metrics-visual {
+    margin-top: 8px;
+    padding: 4px;
+    background: #fff;
+    border-radius: 4px;
+}
+
+.metric-bar {
+    height: 8px;
+    background: linear-gradient(90deg, #4a6cf7, #3a5ce5);
+    border-radius: 4px;
+    transition: width 0.3s ease;
 }

@@ -1,231 +1,201 @@
 class ChatBotPanel {
   constructor(containerId, metricsProvider) {
-    console.log("Initializing ChatBotPanel..."); // Debug log
-    this.container = document.getElementById(containerId) || document.body;
-    this.metricsProvider = metricsProvider;
+    this.container = document.getElementById(containerId);
     this.chatBot = new PerformanceMetricsChatBot(metricsProvider);
-    this.messages = [];
-    this.isOpen = false;
     this.init();
-    console.log("ChatBotPanel initialized."); // Debug log
   }
 
   init() {
-    // Create the floating chat button
-    const chatButton = document.createElement('div');
-    chatButton.className = 'floating-chat-button';
-    chatButton.innerHTML = `
-      <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-      </svg>
-    `;
-    
-    // Create the chat popup container
-    const chatPopup = document.createElement('div');
-    chatPopup.className = 'chat-popup';
-    chatPopup.innerHTML = `
+    // Create chat button with a more visible icon
+    const button = document.createElement('button');
+    button.className = 'floating-chat-button';
+    button.innerHTML = `
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+      </svg>`;
+    this.container.appendChild(button);
+
+    // Create chat popup
+    const popup = document.createElement('div');
+    popup.className = 'chat-popup';
+    popup.innerHTML = `
       <div class="chat-popup-header">
         <span class="chat-popup-title">Performance Assistant</span>
         <button class="chat-popup-close">&times;</button>
       </div>
       <div class="chat-popup-messages"></div>
+      <div class="chat-popup-suggestions"></div>
       <div class="chat-popup-input-container">
-        <input type="text" class="chat-popup-input" placeholder="Ask about your performance metrics...">
+        <input type="text" class="chat-popup-input" placeholder="Ask about performance metrics...">
         <button class="chat-popup-send">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
-            <path d="M22 2L11 13"></path>
-            <path d="M22 2L15 22L11 13L2 9L22 2z"></path>
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
           </svg>
         </button>
       </div>
-      <div class="chat-popup-suggestions"></div>
     `;
-    
-    this.container.appendChild(chatButton);
-    this.container.appendChild(chatPopup);
-    
+    this.container.appendChild(popup);
+
     // Add event listeners
-    chatButton.addEventListener('click', () => this.toggleChat());
-    
-    const closeButton = chatPopup.querySelector('.chat-popup-close');
-    closeButton.addEventListener('click', () => this.toggleChat(false));
-    
-    const inputField = chatPopup.querySelector('.chat-popup-input');
-    const sendButton = chatPopup.querySelector('.chat-popup-send');
-    
-    inputField.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        this.handleUserInput(inputField.value);
-        inputField.value = '';
+    button.addEventListener('click', () => {
+      popup.classList.toggle('open');
+      button.classList.toggle('active');
+      if (popup.classList.contains('open')) {
+        this.showDefaultSuggestions();
       }
     });
-    
-    sendButton.addEventListener('click', () => {
-      this.handleUserInput(inputField.value);
-      inputField.value = '';
+
+    popup.querySelector('.chat-popup-close').addEventListener('click', () => {
+      popup.classList.remove('open');
+      button.classList.remove('active');
     });
-    
-    this.messagesContainer = chatPopup.querySelector('.chat-popup-messages');
-    this.suggestionsContainer = chatPopup.querySelector('.chat-popup-suggestions');
-    
-    // Add welcome message
-    this.addMessage({
-      from: 'bot',
-      content: "👋 Hello! I can help you understand your performance metrics. Ask me about CPU usage, memory, network, and more.",
-      type: 'text'
+
+    const input = popup.querySelector('.chat-popup-input');
+    const send = popup.querySelector('.chat-popup-send');
+
+    const sendMessage = async () => {
+      const message = input.value.trim();
+      if (message) {
+        this.addMessage(message, 'user');
+        input.value = '';
+        this.showThinking();
+        const response = await this.chatBot.processQuestion(message);
+        this.removeThinking();
+        this.handleResponse(response);
+      }
+    };
+
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
     });
-    
-    // Add initial suggestions
-    this.updateSuggestions([
-      "What is my average CPU usage?",
-      "How much memory am I using?",
-      "What are my web vitals scores?",
-      "Help"
-    ]);
+    send.addEventListener('click', sendMessage);
   }
-  
-  toggleChat(forcedState) {
-    const newState = forcedState !== undefined ? forcedState : !this.isOpen;
-    this.isOpen = newState;
-    
-    const chatPopup = this.container.querySelector('.chat-popup');
-    const chatButton = this.container.querySelector('.floating-chat-button');
-    
-    if (this.isOpen) {
-      chatPopup.classList.add('open');
-      chatButton.classList.add('active');
-      
-      // Focus the input field when opened
-      setTimeout(() => {
-        const input = chatPopup.querySelector('.chat-popup-input');
-        if (input) input.focus();
-      }, 300);
-      
-      // Scroll to bottom of messages
-      this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-    } else {
-      chatPopup.classList.remove('open');
-      chatButton.classList.remove('active');
-    }
+
+  addMessage(text, type) {
+    const messages = this.container.querySelector('.chat-popup-messages');
+    const message = document.createElement('div');
+    message.className = `chat-message ${type}`;
+    message.textContent = text;
+    messages.appendChild(message);
+    messages.scrollTop = messages.scrollHeight;
   }
-  
-  async handleUserInput(text) {
-    if (!text.trim()) return;
 
-    console.log("User input received:", text); // Debug log
+  showThinking() {
+    const messages = this.container.querySelector('.chat-popup-messages');
+    const thinking = document.createElement('div');
+    thinking.className = 'chat-message bot thinking';
+    thinking.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
+    messages.appendChild(thinking);
+    messages.scrollTop = messages.scrollHeight;
+  }
 
-    this.addMessage({ from: "user", content: text, type: "text" });
+  removeThinking() {
+    const thinking = this.container.querySelector('.thinking');
+    if (thinking) thinking.remove();
+  }
 
-    const thinkingId = this.addMessage({ from: "bot", content: "...", type: "thinking" });
-
-    try {
-      console.log("Passing question to chatbot:", text); // Debug log
-      const response = await this.chatBot.processQuestion(text);
-      console.log("Chatbot response:", response); // Debug log
-
-      this.removeMessage(thinkingId);
-
-      if (typeof response === "string") {
-        this.addMessage({ from: "bot", content: response, type: "text" });
-      } else {
-        // Handle structured responses
-        switch (response.type) {
-          case "metric":
-            this.addMessage({ from: "bot", content: response.message, type: "metric" });
-            break;
-          case "list":
-            this.addMessage({ from: "bot", content: response.message, type: "list", items: response.items });
-            break;
-          case "table":
-            this.addMessage({ from: "bot", content: response.message, type: "table", headers: response.headers, data: response.data });
-            break;
-          case "help":
-            this.addMessage({ from: "bot", content: response.message, type: "text" });
-            this.updateSuggestions(response.options);
-            break;
-          default:
-            this.addMessage({ from: "bot", content: "I'm not sure how to display this information.", type: "text" });
+  handleResponse(response) {
+    if (typeof response === 'object') {
+      if (response.type === 'metrics') {
+        this.addMessage(response.message, 'bot metrics');
+        if (response.data) {
+          this.showMetricsVisual(response.data);
         }
+        // Show relevant follow-up questions based on metric type
+        const followUps = this.chatBot.followUpQuestions[response.metricType] || this.getDefaultFollowUps();
+        this.showSuggestions(followUps);
+      } else if (response.type === 'suggestions') {
+        this.addMessage(response.message, 'bot');
+        this.showSuggestions(response.suggestions);
       }
-    } catch (error) {
-      console.error("Error handling user input:", error);
-      this.removeMessage(thinkingId);
-      this.addMessage({ from: "bot", content: "An error occurred. Please try again.", type: "text" });
+    } else {
+      this.addMessage(response, 'bot');
+      this.showSuggestions(this.getDefaultFollowUps());
+    }
+  }
+
+  getDefaultFollowUps() {
+    return [
+      "Check CPU usage",
+      "Memory consumption",
+      "Network activity",
+      "Web Vitals status"
+    ];
+  }
+
+  showFollowUpSuggestions(type, data) {
+    let followUps = [];
+    
+    // Add general follow-ups
+    followUps.push("Show me all metrics");
+    followUps.push("Help");
+
+    // Add context-specific follow-ups
+    switch (type) {
+      case 'metrics':
+        if (data.current !== undefined) {
+          followUps.push("Show historical data");
+          followUps.push("Compare with average");
+        }
+        if (data.used !== undefined) {
+          followUps.push("Show usage trend");
+          followUps.push("Check for memory leaks");
+        }
+        if (data.count !== undefined) {
+          followUps.push("Show detailed breakdown");
+          followUps.push("View timeline");
+        }
+        break;
     }
 
-    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+    // Always add some relevant cross-metric questions
+    followUps.push("How does this affect performance?");
+    followUps.push("What are the recommended values?");
+    
+    this.showSuggestions(followUps);
   }
-  
-  addMessage(message) {
-    const id = Date.now(); // Simple unique ID
-    message.id = id;
-    this.messages.push(message);
+
+  showMetricsVisual(data) {
+    const visualContainer = document.createElement('div');
+    visualContainer.className = 'metrics-visual';
     
-    const messageEl = document.createElement('div');
-    messageEl.className = `chat-message ${message.from}`;
-    messageEl.dataset.id = id;
-    
-    switch (message.type) {
-      case 'thinking':
-        messageEl.innerHTML = `<div class="thinking-dots"><span></span><span></span><span></span></div>`;
-        break;
-        
-      case 'text':
-        messageEl.innerText = message.content;
-        break;
-        
-      case 'metric':
-        messageEl.innerHTML = `<div class="metric-message">${message.content}</div>`;
-        break;
-        
-      case 'table':
-        let tableHtml = `<div class="message-label">${message.content}</div><table>`;
-        // Add headers
-        tableHtml += `<tr>${message.headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
-        // Add rows
-        message.data.forEach(row => {
-          tableHtml += `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
-        });
-        tableHtml += `</table>`;
-        messageEl.innerHTML = tableHtml;
-        break;
-        
-      case 'list':
-        let listHtml = `<div class="message-label">${message.content}</div><ul>`;
-        message.items.forEach(item => {
-          listHtml += `<li>${item}</li>`;
-        });
-        listHtml += `</ul>`;
-        messageEl.innerHTML = listHtml;
-        break;
+    // Create simple bar or visual representation if needed
+    if (typeof data.current === 'number') {
+      const bar = document.createElement('div');
+      bar.className = 'metric-bar';
+      bar.style.width = `${Math.min(data.current, 100)}%`;
+      bar.setAttribute('title', `Current: ${data.current.toFixed(1)}%`);
+      visualContainer.appendChild(bar);
     }
-    
-    this.messagesContainer.appendChild(messageEl);
-    return id;
+
+    const messages = this.container.querySelector('.chat-popup-messages');
+    messages.appendChild(visualContainer);
+    messages.scrollTop = messages.scrollHeight;
   }
-  
-  removeMessage(id) {
-    this.messages = this.messages.filter(m => m.id !== id);
-    const messageEl = this.messagesContainer.querySelector(`.chat-message[data-id="${id}"]`);
-    if (messageEl) {
-      messageEl.remove();
-    }
-  }
-  
-  updateSuggestions(suggestions) {
-    this.suggestionsContainer.innerHTML = '';
+
+  showDefaultSuggestions() {
+    // Get all questions from chatBot
+    const suggestions = this.chatBot.defaultQuestions;
+    this.showSuggestions(suggestions);
     
+    // Add initial welcome message
+    this.addMessage("Welcome! I can help you with performance metrics. Click on any question or type your own.", 'bot');
+  }
+
+  showSuggestions(suggestions) {
+    const container = this.container.querySelector('.chat-popup-suggestions');
+    container.innerHTML = '';
     suggestions.forEach(suggestion => {
       const pill = document.createElement('button');
       pill.className = 'suggestion-pill';
-      pill.innerText = suggestion;
+      pill.textContent = suggestion;
       pill.addEventListener('click', () => {
-        const inputField = this.container.querySelector('.chat-popup-input');
-        inputField.value = suggestion;
-        this.handleUserInput(suggestion);
-        inputField.value = '';
+        const input = this.container.querySelector('.chat-popup-input');
+        input.value = suggestion;
+        input.focus();
       });
-      this.suggestionsContainer.appendChild(pill);
+      container.appendChild(pill);
     });
   }
 }

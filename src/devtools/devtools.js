@@ -7,6 +7,11 @@ class PerformanceMetricsDevTools {
     this.requestsCount = 0;
     this.lastRequestTime = Date.now();
     this.metricsProvider = new MetricsProvider();
+    
+    // Check dock position before initializing
+    this.createErrorOverlay();
+    this.checkDockPosition();
+    
     this.init();
     this.updatePageUrl();
     this.refresh();
@@ -15,8 +20,154 @@ class PerformanceMetricsDevTools {
     this.initRequestsCounter();
     this.setupClearStorageButton();
     this.setupExportButton();
-    // Temporarily disabled chatbot
-    // this.initChatBot();
+    this.initChatBot(); // Re-enabled
+    
+    // Listen for dock position changes
+    this.listenForDockChanges();
+  }
+  
+  createErrorOverlay() {
+    // Create error overlay element if it doesn't exist
+    if (!document.getElementById('dockErrorOverlay')) {
+      const overlay = document.createElement('div');
+      overlay.id = 'dockErrorOverlay';
+      overlay.className = 'dock-error-overlay';
+      
+      const errorContent = document.createElement('div');
+      errorContent.className = 'dock-error-content';
+      
+      const icon = document.createElement('div');
+      icon.innerHTML = '⚠️';
+      icon.className = 'dock-error-icon';
+      
+      const title = document.createElement('h2');
+      title.textContent = 'Incorrect Dock Position';
+      
+      const message = document.createElement('p');
+      message.innerHTML = 'This extension only works in <strong>bottom dock mode</strong>.<br>Please use the menu in the top-right corner to change the dock position.';
+      
+      const instructions = document.createElement('div');
+      instructions.className = 'dock-instructions';
+      instructions.innerHTML = `
+        <p>How to change dock position:</p>
+        <ol>
+          <li>Click the three-dot menu in the top-right corner of DevTools</li>
+          <li>Select "Dock to bottom"</li>
+          <li>Refresh the DevTools panel</li>
+        </ol>
+      `;
+      
+      errorContent.appendChild(icon);
+      errorContent.appendChild(title);
+      errorContent.appendChild(message);
+      errorContent.appendChild(instructions);
+      overlay.appendChild(errorContent);
+      
+      // Add styles for the overlay
+      const styles = document.createElement('style');
+      styles.textContent = `
+        .dock-error-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(30, 30, 30, 0.96);
+          z-index: 10000;
+          display: none;
+          justify-content: center;
+          align-items: center;
+          color: white;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .dock-error-content {
+          background-color: #2c2c2c;
+          border-radius: 8px;
+          padding: 24px;
+          max-width: 500px;
+          text-align: center;
+          box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .dock-error-icon {
+          font-size: 48px;
+          margin-bottom: 16px;
+        }
+        .dock-instructions {
+          background-color: #1d1d1d;
+          border-radius: 6px;
+          padding: 12px;
+          margin-top: 16px;
+          text-align: left;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .dock-instructions ol {
+          margin-left: 20px;
+          padding-left: 0;
+        }
+        .dock-instructions li {
+          margin: 8px 0;
+        }
+        .dock-error-overlay.active {
+          display: flex;
+        }
+      `;
+      
+      document.head.appendChild(styles);
+      document.body.appendChild(overlay);
+    }
+  }
+  
+  checkDockPosition() {
+    // Use chrome.devtools.panels API to get panel dimensions
+    chrome.devtools.panels.elements.createSidebarPane('DockDetect', (sidebar) => {
+      sidebar.setObject({ detecting: true });
+      
+      // Use the panel size to determine the dock position
+      setTimeout(() => {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        console.log(`DevTools dimensions: ${width}x${height}`);
+        
+        // If width is significantly greater than height, it's likely in bottom dock
+        // If height is significantly greater than width, it's likely in side dock
+        const isBottomDock = width > height * 1.3;
+        
+        if (!isBottomDock) {
+          this.showDockError(true);
+        } else {
+          this.showDockError(false);
+        }
+        
+        // Clean up the temporary sidebar
+        chrome.devtools.panels.elements.onSelectionChanged.removeListener(() => {});
+        sidebar.setObject({ done: true });
+      }, 500);
+    });
+  }
+  
+  listenForDockChanges() {
+    // Check dock position whenever window is resized
+    window.addEventListener('resize', () => {
+      // Debounce the resize event
+      clearTimeout(this._resizeTimer);
+      this._resizeTimer = setTimeout(() => {
+        this.checkDockPosition();
+      }, 250);
+    });
+  }
+  
+  showDockError(show) {
+    const overlay = document.getElementById('dockErrorOverlay');
+    if (overlay) {
+      if (show) {
+        overlay.classList.add('active');
+        console.warn('Extension requires bottom dock mode');
+      } else {
+        overlay.classList.remove('active');
+      }
+    }
   }
 
   async refresh() {
@@ -319,50 +470,51 @@ class PerformanceMetricsDevTools {
     try {
       this.metricsProvider.updateMetrics(data);
 
-      if (data.fps && this.panels.fps) {
-        this.panels.fps.update(data.fps);
+      // Helper function to safely update a panel
+      const safeUpdatePanel = (panel, panelData) => {
+        if (panel && typeof panel.update === 'function' && panelData) {
+          try {
+            // Explicitly call updateLastActivity before update to reset timer
+            if (typeof panel.updateLastActivity === 'function') {
+              panel.updateLastActivity();
+            }
+            panel.update(panelData);
+            return true;
+          } catch (e) {
+            console.error(`Error updating panel:`, e);
+            return false;
+          }
+        }
+        return false;
+      };
+
+      // Update each panel with its corresponding data
+      if (data.fps) safeUpdatePanel(this.panels.fps, data.fps);
+      if (data.memory) {
+        safeUpdatePanel(this.panels.memory, data.memory);
+        safeUpdatePanel(this.panels.jsHeap, data.memory);
       }
-      if (data.memory && this.panels.memory) {
-        this.panels.memory.update(data.memory);
-      }
-      if (data.network && this.panels.network) {
-        this.panels.network.update(data.network);
-      }
-      if (data.cpu && this.panels.cpu) {
-        this.panels.cpu.update(data.cpu);
-      }
-      if (data.dom && this.panels.dom) {
-        this.panels.dom.update(data.dom);
-      }
-      if (data.memory && this.panels.jsHeap) {
-        this.panels.jsHeap.update(data.memory);
-      }
-      if (data.layoutShifts && this.panels.layoutShifts) {
-        this.panels.layoutShifts.update(data.layoutShifts);
-      }
-      if (data.resourceTiming && this.panels.resourceTiming) {
-        this.panels.resourceTiming.update(data.resourceTiming);
-      }
-      if (data.firstPaint && this.panels.firstPaint) {
-        this.panels.firstPaint.update(data.firstPaint);
-      }
-      if (data.pageLoad && this.panels.pageLoad) {
-        this.panels.pageLoad.update(data.pageLoad);
-      }
-      if (data.longTasks && this.panels.longTasks) {
-        this.panels.longTasks.update(data.longTasks);
-      }
+      if (data.network) safeUpdatePanel(this.panels.network, data.network);
+      if (data.cpu) safeUpdatePanel(this.panels.cpu, data.cpu);
+      if (data.dom) safeUpdatePanel(this.panels.dom, data.dom);
+      if (data.layoutShifts) safeUpdatePanel(this.panels.layoutShifts, data.layoutShifts);
+      if (data.resourceTiming) safeUpdatePanel(this.panels.resourceTiming, data.resourceTiming);
+      if (data.firstPaint) safeUpdatePanel(this.panels.firstPaint, data.firstPaint);
+      if (data.pageLoad) safeUpdatePanel(this.panels.pageLoad, data.pageLoad);
+      if (data.longTasks) safeUpdatePanel(this.panels.longTasks, data.longTasks);
+      
       if (data.pageErrors) {
         console.log('Updating page errors panel:', data.pageErrors);
-        this.panels.pageErrors.update({
+        safeUpdatePanel(this.panels.pageErrors, {
           count: data.pageErrors.count || 0,
           errors: data.pageErrors.recentErrors || [],
           timestamp: data.pageErrors.timestamp
         });
       }
+      
       if (data.cacheUsage) {
         console.log('Updating cache usage panel:', data.cacheUsage);
-        this.panels.cacheUsage.update({
+        safeUpdatePanel(this.panels.cacheUsage, {
           size: data.cacheUsage.size || 0,
           hits: data.cacheUsage.hits || 0,
           misses: data.cacheUsage.misses || 0,
@@ -370,57 +522,38 @@ class PerformanceMetricsDevTools {
           timestamp: data.cacheUsage.timestamp
         });
       }
-      if (data.apiPerformance) {
+      
+      if (data.apiPerformance && data.apiPerformance.length > 0) {
         // Make a copy to avoid modifying the original data
         let apiData = [...data.apiPerformance];
         
         console.log('Updating API panel with data of length:', apiData.length);
         if (this.panels.apiPerformance) {
-          this.panels.apiPerformance.update(apiData);
+          safeUpdatePanel(this.panels.apiPerformance, apiData);
         } else {
           console.warn('API Performance panel not initialized yet');
           // Initialize it if needed
           this.panels.apiPerformance = new APIPerformancePanel('apiPerformancePanel');
-          this.panels.apiPerformance.update(apiData);
+          safeUpdatePanel(this.panels.apiPerformance, apiData);
         }
       }
 
       // Update new panels - Ensure keys match the snapshot from contentScript.js
-      if (data.webVitals && this.panels.webVitals) {
-        this.panels.webVitals.update(data.webVitals);
-      } else if (!this.panels.webVitals) {
-        console.warn('WebVitals panel not initialized');
-      }
+      if (data.webVitals) safeUpdatePanel(this.panels.webVitals, data.webVitals);
+      if (data.serverTiming) safeUpdatePanel(this.panels.serverTiming, data.serverTiming);
+      if (data.websocket) safeUpdatePanel(this.panels.websocket, data.websocket);
+      if (data.storage) safeUpdatePanel(this.panels.storage, data.storage);
+      if (data.performanceMetrics) safeUpdatePanel(this.panels.performanceMetrics, data.performanceMetrics);
+      if (data.userInteraction) safeUpdatePanel(this.panels.userInteraction, data.userInteraction);
 
-      if (data.serverTiming && this.panels.serverTiming) {
-        this.panels.serverTiming.update(data.serverTiming);
-      } else if (!this.panels.serverTiming) {
-        console.warn('ServerTiming panel not initialized');
-      }
-
-      if (data.websocket && this.panels.websocket) {
-        this.panels.websocket.update(data.websocket);
-      } else if (!this.panels.websocket) {
-        console.warn('Websocket panel not initialized');
-      }
-
-      if (data.storage && this.panels.storage) {
-        this.panels.storage.update(data.storage);
-      } else if (!this.panels.storage) {
-        console.warn('Storage panel not initialized');
-      }
-
-      if (data.performanceMetrics && this.panels.performanceMetrics) {
-        this.panels.performanceMetrics.update(data.performanceMetrics);
-      } else if (!this.panels.performanceMetrics) {
-        console.warn('PerformanceMetrics panel not initialized');
-      }
-
-      if (data.userInteraction && this.panels.userInteraction) {
-        this.panels.userInteraction.update(data.userInteraction);
-      } else if (!this.panels.userInteraction) {
-        console.warn('UserInteraction panel not initialized');
-      }
+      // Force check all panels after short delay to ensure timeout works
+      setTimeout(() => {
+        Object.values(this.panels).forEach(panel => {
+          if (panel && typeof panel.startActivityCheck === 'function') {
+            panel.startActivityCheck();
+          }
+        });
+      }, 1000);
 
     } catch (e) {
       console.error("Error updating panels:", e);
@@ -532,21 +665,21 @@ class PerformanceMetricsDevTools {
     }, 1000);
   }
 
-  // Temporarily disabled chatbot
-  /*
+  // Re-enable chatbot initialization
   initChatBot() {
     console.log("Initializing ChatBotPanel...");
     const chatContainerId = "chatbot-container";
     let chatContainer = document.getElementById(chatContainerId);
+    
     if (!chatContainer) {
       chatContainer = document.createElement("div");
       chatContainer.id = chatContainerId;
       document.body.appendChild(chatContainer);
     }
+    
     this.chatBot = new ChatBotPanel(chatContainerId, this.metricsProvider);
     console.log("ChatBotPanel initialized successfully.");
   }
-  */
 }
 
 // Add this near other performance measurements
