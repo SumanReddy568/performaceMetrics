@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Performance Metrics",
-  "version": "1.0.3",
+  "version": "1.0.1",
   "description": "Advanced performance metrics dashboard for web pages",
   "devtools_page": "/src/devtools/devtools.html",
   "icons": {
@@ -23,8 +23,7 @@
     "tabs",
     "activeTab",
     "system.cpu",
-    "system.memory",
-    "system.storage"
+    "system.memory"
   ],
   "web_accessible_resources": [
     {
