@@ -81,7 +81,10 @@ zip -r "$ZIP_FILE" . \
     -i "src/**/*" \
     -i "background/**/*" \
     -i "lib/**/*" \
-    -i "icons/**/*" \
+    -i "icons/*.png" \
+    -i "icons/icon16.png" \
+    -i "icons/icon48.png" \
+    -i "icons/icon128.png" \
     -i "assets/styles/*.css" \
     -i "assets/**/*" \
     -x "*extensions*" \
