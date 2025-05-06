@@ -1,3 +1,6 @@
+## [1.0.3] - 2025-05-06
+- Zipper misc fix
+
 ## [1.0.2] - 2025-05-04
 - Update manifest version to 1.0.2
 
