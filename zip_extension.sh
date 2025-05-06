@@ -78,11 +78,12 @@ fi
 # Create zip from root directory
 zip -r "$ZIP_FILE" . \
     -i "manifest.json" \
-    -i "src/*" \
-    -i "background/*" \
-    -i "lib/*" \
-    -i "icons/*" \
-    -i "assets/styles/global.css" \
+    -i "src/**/*" \
+    -i "background/**/*" \
+    -i "lib/**/*" \
+    -i "icons/**/*" \
+    -i "assets/styles/*.css" \
+    -i "assets/**/*" \
     -x "*extensions*" \
     -x "*.git*" \
     -x ".github/*" \

@@ -575,7 +575,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(45, 45, 45, 0.7);
+    /* Reduced opacity from 0.85 to 0.7 */
+    backdrop-filter: blur(1px);
+    /* Reduced blur effect from 3px to 1px */
     color: #fff;
     font-size: 14px;
     font-weight: bold;
@@ -583,9 +586,15 @@
 }
 
 .panel-timeout-indicator span {
-    background-color: rgba(255, 59, 48, 0.8);
-    padding: 6px 12px;
+    background-color: rgba(255, 59, 48, 0.9);
+    /* Increased opacity from 0.8 to 0.9 */
+    padding: 8px 16px;
+    /* Increased padding for better visibility */
     border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    /* Added shadow for better contrast */
+    font-size: 15px;
+    /* Slightly increased font size */
 }
 
 .panel-active {
