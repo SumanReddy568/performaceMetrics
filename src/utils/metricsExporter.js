@@ -68,7 +68,7 @@ class MetricsExporter {
       ((data.cacheUsage?.size || 0) / (1024 * 1024)).toFixed(2),
       data.cacheUsage?.hits || 0,
       data.cacheUsage?.misses || 0,
-      data.cacheUsage?.hits && data.cacheUsage?.misses ? 
+      data.cacheUsage?.hits && data.cacheUsage?.misses ?
         ((data.cacheUsage.hits / (data.cacheUsage.hits + data.cacheUsage.misses)) * 100).toFixed(2) : 0,
       data.cacheUsage?.totalEntries || 0,
       data.webVitals?.lcp || 0,
@@ -100,7 +100,7 @@ class MetricsExporter {
     const csv = this.convertToCSV(data);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    
+
     if (navigator.msSaveBlob) {
       navigator.msSaveBlob(blob, filename);
       return;
@@ -117,5 +117,22 @@ class MetricsExporter {
     return errors
       .map(e => `${e.type}: ${e.message}`)
       .join(' | ');
+  }
+
+  // Export all real-time metrics as JSON (all panel data, not just summary)
+  static downloadJSON(allPanelData, filename = 'performance-metrics.json') {
+    try {
+      const jsonStr = JSON.stringify(allPanelData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error('Error exporting metrics as JSON:', e);
+      alert('Error exporting metrics as JSON. Check console for details.');
+    }
   }
 }

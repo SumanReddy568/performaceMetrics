@@ -7,11 +7,11 @@ class PerformanceMetricsDevTools {
     this.requestsCount = 0;
     this.lastRequestTime = Date.now();
     this.metricsProvider = new MetricsProvider();
-    
+
     // Check dock position before initializing
     this.createErrorOverlay();
     this.checkDockPosition();
-    
+
     this.init();
     this.updatePageUrl();
     this.refresh();
@@ -21,31 +21,31 @@ class PerformanceMetricsDevTools {
     this.setupClearStorageButton();
     this.setupExportButton();
     this.initChatBot(); // Re-enabled
-    
+
     // Listen for dock position changes
     this.listenForDockChanges();
   }
-  
+
   createErrorOverlay() {
     // Create error overlay element if it doesn't exist
     if (!document.getElementById('dockErrorOverlay')) {
       const overlay = document.createElement('div');
       overlay.id = 'dockErrorOverlay';
       overlay.className = 'dock-error-overlay';
-      
+
       const errorContent = document.createElement('div');
       errorContent.className = 'dock-error-content';
-      
+
       const icon = document.createElement('div');
       icon.innerHTML = '⚠️';
       icon.className = 'dock-error-icon';
-      
+
       const title = document.createElement('h2');
       title.textContent = 'Incorrect Dock Position';
-      
+
       const message = document.createElement('p');
       message.innerHTML = 'This extension only works in <strong>bottom dock mode</strong>.<br>Please use the menu in the top-right corner to change the dock position.';
-      
+
       const instructions = document.createElement('div');
       instructions.className = 'dock-instructions';
       instructions.innerHTML = `
@@ -56,13 +56,13 @@ class PerformanceMetricsDevTools {
           <li>Refresh the DevTools panel</li>
         </ol>
       `;
-      
+
       errorContent.appendChild(icon);
       errorContent.appendChild(title);
       errorContent.appendChild(message);
       errorContent.appendChild(instructions);
       overlay.appendChild(errorContent);
-      
+
       // Add styles for the overlay
       const styles = document.createElement('style');
       styles.textContent = `
@@ -112,41 +112,41 @@ class PerformanceMetricsDevTools {
           display: flex;
         }
       `;
-      
+
       document.head.appendChild(styles);
       document.body.appendChild(overlay);
     }
   }
-  
+
   checkDockPosition() {
     // Use chrome.devtools.panels API to get panel dimensions
     chrome.devtools.panels.elements.createSidebarPane('DockDetect', (sidebar) => {
       sidebar.setObject({ detecting: true });
-      
+
       // Use the panel size to determine the dock position
       setTimeout(() => {
         const width = window.innerWidth;
         const height = window.innerHeight;
-        
+
         console.log(`DevTools dimensions: ${width}x${height}`);
-        
+
         // If width is significantly greater than height, it's likely in bottom dock
         // If height is significantly greater than width, it's likely in side dock
         const isBottomDock = width > height * 1.3;
-        
+
         if (!isBottomDock) {
           this.showDockError(true);
         } else {
           this.showDockError(false);
         }
-        
+
         // Clean up the temporary sidebar
-        chrome.devtools.panels.elements.onSelectionChanged.removeListener(() => {});
+        chrome.devtools.panels.elements.onSelectionChanged.removeListener(() => { });
         sidebar.setObject({ done: true });
       }, 500);
     });
   }
-  
+
   listenForDockChanges() {
     // Check dock position whenever window is resized
     window.addEventListener('resize', () => {
@@ -157,7 +157,7 @@ class PerformanceMetricsDevTools {
       }, 250);
     });
   }
-  
+
   showDockError(show) {
     const overlay = document.getElementById('dockErrorOverlay');
     if (overlay) {
@@ -192,19 +192,19 @@ class PerformanceMetricsDevTools {
       try {
         // Clear chrome.storage.local
         await chrome.storage.local.clear();
-        
+
         // Clear chrome.storage.sync if used
         await chrome.storage.sync.clear();
-        
+
         // Clear IndexedDB if used
         const dbs = await window.indexedDB.databases();
         for (const db of dbs) {
           window.indexedDB.deleteDatabase(db.name);
         }
-        
+
         // Show success message
         alert('Extension storage cleared successfully!');
-        
+
         // Refresh panels to reflect cleared state
         this.refreshPanels();
       } catch (error) {
@@ -217,49 +217,20 @@ class PerformanceMetricsDevTools {
   setupExportButton() {
     const exportButton = document.getElementById('exportButton');
     exportButton.addEventListener('click', () => {
-      // Prepare metrics data with current timestamp
-      const perfMetrics = this.panels.performanceMetrics?.data || {};
-      const webVitalsData = this.panels.webVitals?.data || {};
-      const metricsData = {
-        timestamp: Date.now(),
-        fps: this.panels.fps?.data?.slice(-1)[0] || { value: 0 },
-        memory: this.panels.memory?.data?.slice(-1)[0] || { usedJSHeapSize: 0, totalJSHeapSize: 0 },
-        network: this.panels.network?.data?.slice(-1)[0] || { requests: 0, transferred: 0 },
-        cpu: this.panels.cpu?.data?.slice(-1)[0] || { usage: 0 },
-        dom: this.panels.dom?.data?.slice(-1)[0] || { elements: 0, nodes: 0, listeners: 0 },
-        layoutShifts: this.panels.layoutShifts?.data?.slice(-1)[0] || { cumulativeLayoutShift: 0 },
-        resourceTiming: this.panels.resourceTiming?.data?.slice(-1)[0] || {},
-        firstPaint: this.panels.firstPaint?.data?.slice(-1)[0] || { fp: 0, fcp: 0 },
-        pageLoad: this.panels.pageLoad?.data?.slice(-1)[0] || { domLoadTime: 0, windowLoadTime: 0 },
-        longTasks: this.panels.longTasks?.data?.slice(-1)[0] || { duration: 0 },
-        apiPerformance: this.panels.apiPerformance?.data || [],
-        pageErrors: this.panels.pageErrors?.data?.slice(-1)[0] || { count: 0, recentErrors: [] },
-        cacheUsage: this.panels.cacheUsage?.data?.slice(-1)[0] || { size: 0, hits: 0, misses: 0, totalEntries: 0 },
-        webVitals: {
-          lcp: webVitalsData.lcp || 0,
-          fid: webVitalsData.fid || 0,
-          cls: webVitalsData.cls || 0
-        },
-        serverTiming: this.panels.serverTiming?.data?.slice(-1)[0] || { metrics: [] },
-        websocket: this.panels.websocket?.data?.slice(-1)[0] || { connections: [] },
-        storage: this.panels.storage?.data?.slice(-1)[0] || { localStorage: 0, sessionStorage: 0, indexedDB: 0 },
-        performanceMetrics: {
-          markCount: perfMetrics.marks?.length || 0,
-          measureCount: perfMetrics.measures?.length || 0
-        },
-        userInteraction: this.panels.userInteraction?.data?.slice(-1)[0] || { clicks: 0, scrolls: 0, keypresses: 0 }
-      };
-
-      console.log('Exporting metrics data:', metricsData); // Debug log
-
-      const filename = `performance-metrics-${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
-
+      // Gather all panel data for full JSON export
+      const allPanelData = {};
+      for (const key in this.panels) {
+        if (this.panels[key] && this.panels[key].data !== undefined) {
+          allPanelData[key] = this.panels[key].data;
+        }
+      }
+      const filename = `performance-metrics-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
       try {
-        MetricsExporter.downloadCSV([metricsData], filename);
-        console.log('Metrics exported successfully');
+        MetricsExporter.downloadJSON(allPanelData, filename);
+        console.log('Metrics exported as JSON successfully');
       } catch (error) {
-        console.error('Error exporting metrics:', error);
-        alert('Error exporting metrics. Check console for details.');
+        console.error('Error exporting metrics as JSON:', error);
+        alert('Error exporting metrics as JSON. Check console for details.');
       }
     });
   }
@@ -283,9 +254,9 @@ class PerformanceMetricsDevTools {
 
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message.type === 'api-performance-update') {
-          apiPerformancePanel.update(message.data);
+        apiPerformancePanel.update(message.data);
       }
-  });
+    });
 
     // Update URL when page changes
     chrome.devtools.network.onNavigated.addListener((url) => {
@@ -299,13 +270,13 @@ class PerformanceMetricsDevTools {
     try {
       const urlObj = new URL(url);
       const maxLength = 75; // Maximum URL length to display
-      
+
       let formatted = url;
       if (url.length > maxLength) {
         // Keep protocol and hostname
         const base = `${urlObj.protocol}//${urlObj.hostname}`;
         const path = urlObj.pathname + urlObj.search + urlObj.hash;
-        
+
         if (base.length > maxLength - 3) {
           // If hostname itself is too long
           formatted = base.substring(0, maxLength - 3) + '...';
@@ -373,7 +344,7 @@ class PerformanceMetricsDevTools {
               timestamp: Date.now()
             }];
           }
-          
+
           console.log('API data received:', message.data.apiPerformance);
           this.updatePanels(message.data);
         } else if (message.type === 'api-performance-update') {
@@ -445,7 +416,7 @@ class PerformanceMetricsDevTools {
       this.panels.storage = new StoragePanel('storagePanel');
       this.panels.performanceMetrics = new PerformanceMetricsPanel('performanceMetricsPanel');
       this.panels.userInteraction = new UserInteractionPanel('userInteractionPanel');
-      
+
     } catch (e) {
       console.error("Error loading panels:", e);
     }
@@ -502,7 +473,7 @@ class PerformanceMetricsDevTools {
       if (data.firstPaint) safeUpdatePanel(this.panels.firstPaint, data.firstPaint);
       if (data.pageLoad) safeUpdatePanel(this.panels.pageLoad, data.pageLoad);
       if (data.longTasks) safeUpdatePanel(this.panels.longTasks, data.longTasks);
-      
+
       if (data.pageErrors) {
         console.log('Updating page errors panel:', data.pageErrors);
         safeUpdatePanel(this.panels.pageErrors, {
@@ -511,7 +482,7 @@ class PerformanceMetricsDevTools {
           timestamp: data.pageErrors.timestamp
         });
       }
-      
+
       if (data.cacheUsage) {
         console.log('Updating cache usage panel:', data.cacheUsage);
         safeUpdatePanel(this.panels.cacheUsage, {
@@ -522,11 +493,11 @@ class PerformanceMetricsDevTools {
           timestamp: data.cacheUsage.timestamp
         });
       }
-      
+
       if (data.apiPerformance && data.apiPerformance.length > 0) {
         // Make a copy to avoid modifying the original data
         let apiData = [...data.apiPerformance];
-        
+
         console.log('Updating API panel with data of length:', apiData.length);
         if (this.panels.apiPerformance) {
           safeUpdatePanel(this.panels.apiPerformance, apiData);
@@ -656,9 +627,9 @@ class PerformanceMetricsDevTools {
       const now = Date.now();
       const timeDiff = (now - this.lastRequestTime) / 1000;
       const reqPerSec = (this.requestsCount / timeDiff).toFixed(1);
-      
+
       document.getElementById('requests-per-sec').textContent = `${reqPerSec}/s`;
-      
+
       // Reset counter
       this.requestsCount = 0;
       this.lastRequestTime = now;
@@ -670,13 +641,13 @@ class PerformanceMetricsDevTools {
     console.log("Initializing ChatBotPanel...");
     const chatContainerId = "chatbot-container";
     let chatContainer = document.getElementById(chatContainerId);
-    
+
     if (!chatContainer) {
       chatContainer = document.createElement("div");
       chatContainer.id = chatContainerId;
       document.body.appendChild(chatContainer);
     }
-    
+
     this.chatBot = new ChatBotPanel(chatContainerId, this.metricsProvider);
     console.log("ChatBotPanel initialized successfully.");
   }
@@ -703,20 +674,20 @@ chrome.devtools.inspectedWindow.eval(`
 `);
 
 // Add this in your message handler
-window.addEventListener('message', function(event) {
+window.addEventListener('message', function (event) {
   if (event.data.type === 'interaction') {
-      switch(event.data.action) {
-          case 'click':
-              interactionData.clicks++;
-              break;
-          case 'scroll':
-              interactionData.scrolls++;
-              break;
-          case 'keypress':
-              interactionData.keypresses++;
-              break;
-      }
-      panels.userInteraction.update(interactionData);
+    switch (event.data.action) {
+      case 'click':
+        interactionData.clicks++;
+        break;
+      case 'scroll':
+        interactionData.scrolls++;
+        break;
+      case 'keypress':
+        interactionData.keypresses++;
+        break;
+    }
+    panels.userInteraction.update(interactionData);
   }
 });
 
@@ -726,15 +697,15 @@ function resetMeasurements() {
 }
 
 // Add dropdown menu handling
-document.getElementById('menuButton').addEventListener('click', function(e) {
-    e.stopPropagation();
-    document.getElementById('dropdownMenu').classList.toggle('active');
+document.getElementById('menuButton').addEventListener('click', function (e) {
+  e.stopPropagation();
+  document.getElementById('dropdownMenu').classList.toggle('active');
 });
 
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.menu-wrapper')) {
-        document.getElementById('dropdownMenu').classList.remove('active');
-    }
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('.menu-wrapper')) {
+    document.getElementById('dropdownMenu').classList.remove('active');
+  }
 });
 
 // Panel Classes
@@ -854,43 +825,43 @@ class CPUPanel {
 new PerformanceMetricsDevTools();
 
 // Wait for DOM to load
-document.addEventListener('DOMContentLoaded', function() {
-    // Release notes modal functionality
-    const releaseNotesButton = document.getElementById('releaseNotesButton');
-    if (releaseNotesButton) {
-        releaseNotesButton.addEventListener('click', showReleaseNotes);
-    }
-    
-    function showReleaseNotes() {
-        // Create modal if it doesn't exist
-        let modalOverlay = document.querySelector('.modal-overlay');
-        if (!modalOverlay) {
-            modalOverlay = document.createElement('div');
-            modalOverlay.className = 'modal-overlay';
-            
-            const modalContent = document.createElement('div');
-            modalContent.className = 'modal-content';
-            
-            const modalHeader = document.createElement('div');
-            modalHeader.className = 'modal-header';
-            
-            const modalTitle = document.createElement('h2');
-            modalTitle.textContent = 'Release Notes';
-            
-            const closeButton = document.createElement('button');
-            closeButton.className = 'modal-close';
-            closeButton.innerHTML = '&times;';
-            closeButton.addEventListener('click', () => {
-                modalOverlay.classList.remove('active');
-            });
-            
-            modalHeader.appendChild(modalTitle);
-            modalHeader.appendChild(closeButton);
-            
-            const releaseNotesContent = document.createElement('div');
-            releaseNotesContent.className = 'release-notes-content';
-            
-            releaseNotesContent.innerHTML = `
+document.addEventListener('DOMContentLoaded', function () {
+  // Release notes modal functionality
+  const releaseNotesButton = document.getElementById('releaseNotesButton');
+  if (releaseNotesButton) {
+    releaseNotesButton.addEventListener('click', showReleaseNotes);
+  }
+
+  function showReleaseNotes() {
+    // Create modal if it doesn't exist
+    let modalOverlay = document.querySelector('.modal-overlay');
+    if (!modalOverlay) {
+      modalOverlay = document.createElement('div');
+      modalOverlay.className = 'modal-overlay';
+
+      const modalContent = document.createElement('div');
+      modalContent.className = 'modal-content';
+
+      const modalHeader = document.createElement('div');
+      modalHeader.className = 'modal-header';
+
+      const modalTitle = document.createElement('h2');
+      modalTitle.textContent = 'Release Notes';
+
+      const closeButton = document.createElement('button');
+      closeButton.className = 'modal-close';
+      closeButton.innerHTML = '&times;';
+      closeButton.addEventListener('click', () => {
+        modalOverlay.classList.remove('active');
+      });
+
+      modalHeader.appendChild(modalTitle);
+      modalHeader.appendChild(closeButton);
+
+      const releaseNotesContent = document.createElement('div');
+      releaseNotesContent.className = 'release-notes-content';
+
+      releaseNotesContent.innerHTML = `
                 <h3>Version 1.0.3 (Current)</h3>
                 <ul>
                     <li class="feature">Added server timing metrics visualization</li>
@@ -923,24 +894,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li class="feature">Network requests monitoring</li>
                 </ul>
             `;
-            
-            modalContent.appendChild(modalHeader);
-            modalContent.appendChild(releaseNotesContent);
-            modalOverlay.appendChild(modalContent);
-            document.body.appendChild(modalOverlay);
-            
-            modalOverlay.addEventListener('click', function(e) {
-                if (e.target === modalOverlay) {
-                    modalOverlay.classList.remove('active');
-                }
-            });
+
+      modalContent.appendChild(modalHeader);
+      modalContent.appendChild(releaseNotesContent);
+      modalOverlay.appendChild(modalContent);
+      document.body.appendChild(modalOverlay);
+
+      modalOverlay.addEventListener('click', function (e) {
+        if (e.target === modalOverlay) {
+          modalOverlay.classList.remove('active');
         }
-        
-        modalOverlay.classList.add('active');
-        
-        const dropdownMenu = document.getElementById('dropdownMenu');
-        if (dropdownMenu) {
-            dropdownMenu.classList.remove('active');
-        }
+      });
     }
+
+    modalOverlay.classList.add('active');
+
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    if (dropdownMenu) {
+      dropdownMenu.classList.remove('active');
+    }
+  }
 });
