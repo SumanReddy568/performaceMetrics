@@ -11,7 +11,11 @@ class PerformanceCollector {
       longTasks: [],
       apiPerformance: [],
       pageErrors: [],
-      cacheUsage: []
+      cacheUsage: [],
+      eventLoopLag: [],
+      paintTiming: [],
+      navigationTiming: [],
+      e2e: []
     };
     this.performanceData = {
       webVitals: [],
@@ -49,6 +53,10 @@ class PerformanceCollector {
     this.collectStorageMetrics();
     this.collectPerformanceMetrics();
     this.startUserInteractionMonitor();
+    this.startEventLoopLagMonitor();
+    this.startPaintTimingMonitor();
+    this.startNavigationTimingMonitor();
+    this.startE2EMonitor();
 
     setInterval(() => this.sendUpdates(), 1000);
   }
@@ -104,7 +112,7 @@ class PerformanceCollector {
               type: 'api-performance-update',
               data: [callData]
             });
-          } catch (e) {}
+          } catch (e) { }
 
           self.sendApiPerformanceUpdate();
         } catch (e) {
@@ -156,7 +164,7 @@ class PerformanceCollector {
                 type: 'api-performance-update',
                 data: [callData]
               });
-            } catch (e) {}
+            } catch (e) { }
 
             self.sendApiPerformanceUpdate();
           }).catch(e => {
@@ -282,7 +290,21 @@ class PerformanceCollector {
         scrolls: 0,
         keypresses: 0,
         timestamp: Date.now()
-      }
+      },
+      eventLoopLag: {
+        value: this.metrics.eventLoopLag.slice(-1)[0]?.lag || 0,
+        timestamp: Date.now()
+      },
+      paintTiming: {
+        fp: this.metrics.paintTiming.slice(-1)[0]?.fp || 0,
+        fcp: this.metrics.paintTiming.slice(-1)[0]?.fcp || 0,
+        timestamp: Date.now()
+      },
+      navigationTiming: {
+        metrics: this.metrics.navigationTiming.slice(-1)[0]?.metrics || [],
+        timestamp: Date.now()
+      },
+      e2e: this.metrics.e2e.slice(-20) || []
     };
 
     this.listeners.forEach(callback => callback(snapshot));
@@ -554,8 +576,8 @@ class PerformanceCollector {
         count: 1,
         type: 'JavaScript Error',
         message: event.message || 'Unknown Error',
-        location: event.filename ? 
-          `${event.filename}:${event.lineno || 0}:${event.colno || 0}` : 
+        location: event.filename ?
+          `${event.filename}:${event.lineno || 0}:${event.colno || 0}` :
           'Unknown Location',
         timestamp: Date.now(),
         stack: event.error?.stack || ''
@@ -582,7 +604,7 @@ class PerformanceCollector {
       const errorData = {
         count: 1,
         type: 'Console Error',
-        message: args.map(arg => 
+        message: args.map(arg =>
           typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
         ).join(' '),
         location: new Error().stack?.split('\n')[2]?.trim() || 'Console',
@@ -601,7 +623,7 @@ class PerformanceCollector {
 
     if ('caches' in window) {
       const originalMatch = Cache.prototype.match;
-      Cache.prototype.match = async function(...args) {
+      Cache.prototype.match = async function (...args) {
         const result = await originalMatch.apply(this, args);
         if (result) {
           this._cacheHits++;
@@ -717,7 +739,7 @@ class PerformanceCollector {
     const originalWebSocket = window.WebSocket;
     let connections = new Map();
 
-    window.WebSocket = function(...args) {
+    window.WebSocket = function (...args) {
       const ws = new originalWebSocket(...args);
       const url = args[0];
       const metrics = {
@@ -794,8 +816,8 @@ class PerformanceCollector {
       });
     });
 
-    observer.observe({ 
-      entryTypes: ['mark', 'measure', 'resource', 'paint', 'navigation'] 
+    observer.observe({
+      entryTypes: ['mark', 'measure', 'resource', 'paint', 'navigation']
     });
   }
 
@@ -836,5 +858,101 @@ class PerformanceCollector {
       this.userInteractionMetrics.scrolls = 0;
       this.userInteractionMetrics.keypresses = 0;
     }, 1000);
+  }
+
+  startEventLoopLagMonitor() {
+    let lastTime = performance.now();
+    const checkLag = () => {
+      const currentTime = performance.now();
+      const lag = Math.max(0, currentTime - lastTime - 100); // Expected 100ms intervals
+
+      this.metrics.eventLoopLag.push({
+        lag,
+        timestamp: currentTime
+      });
+
+      if (this.metrics.eventLoopLag.length > 100) {
+        this.metrics.eventLoopLag.shift();
+      }
+
+      lastTime = currentTime;
+      setTimeout(checkLag, 100);
+    };
+
+    checkLag();
+  }
+
+  startPaintTimingMonitor() {
+    try {
+      const observer = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        let fp = 0, fcp = 0;
+
+        entries.forEach(entry => {
+          if (entry.name === 'first-paint') {
+            fp = entry.startTime;
+          }
+          if (entry.name === 'first-contentful-paint') {
+            fcp = entry.startTime;
+          }
+        });
+
+        if (fp || fcp) {
+          this.metrics.paintTiming.push({
+            fp,
+            fcp,
+            timestamp: Date.now()
+          });
+        }
+      });
+
+      observer.observe({ entryTypes: ['paint'] });
+    } catch (e) {
+      console.warn('Paint Timing API not supported:', e);
+    }
+  }
+
+  startNavigationTimingMonitor() {
+    try {
+      const observer = new PerformanceObserver((list) => {
+        const entry = list.getEntries()[0];
+        const metrics = [
+          { name: 'DNS', value: entry.domainLookupEnd - entry.domainLookupStart },
+          { name: 'TCP', value: entry.connectEnd - entry.connectStart },
+          { name: 'Request', value: entry.responseStart - entry.requestStart },
+          { name: 'Response', value: entry.responseEnd - entry.responseStart },
+          { name: 'DOM Processing', value: entry.domComplete - entry.responseEnd }
+        ];
+
+        this.metrics.navigationTiming.push({
+          metrics,
+          timestamp: Date.now()
+        });
+      });
+
+      observer.observe({ entryTypes: ['navigation'] });
+    } catch (e) {
+      console.warn('Navigation Timing API not supported:', e);
+    }
+  }
+
+  startE2EMonitor() {
+    // This could be replaced with actual E2E metrics in production
+    setInterval(() => {
+      const scenarios = ['Login', 'Search', 'Checkout', 'Profile', 'Settings'];
+      const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+
+      this.metrics.e2e.push({
+        scenario,
+        duration: Math.random() * 1000 + 500,
+        success: Math.random() > 0.1,
+        timestamp: Date.now()
+      });
+
+      // Keep only last 100 entries
+      if (this.metrics.e2e.length > 100) {
+        this.metrics.e2e.shift();
+      }
+    }, 5000); // Collect every 5 seconds
   }
 }

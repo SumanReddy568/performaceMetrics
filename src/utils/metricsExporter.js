@@ -42,7 +42,14 @@ class MetricsExporter {
       'Performance Measures Count',
       'User Clicks',
       'User Scrolls',
-      'User Keypresses'
+      'User Keypresses',
+      'E2E Event',
+      'E2E Duration (ms)',
+      'Event Loop Lag (ms)',
+      'Paint FP (ms)',
+      'Paint FCP (ms)',
+      'Navigation domComplete (ms)',
+      'Navigation loadEventEnd (ms)'
     ];
 
     const rows = metricsData.map(data => [
@@ -86,7 +93,16 @@ class MetricsExporter {
       data.performanceMetrics?.measureCount || 0,
       data.userInteraction?.clicks || 0,
       data.userInteraction?.scrolls || 0,
-      data.userInteraction?.keypresses || 0
+      data.userInteraction?.keypresses || 0,
+      data.e2e && data.e2e.length ? data.e2e[data.e2e.length - 1].event : '',
+      data.e2e && data.e2e.length ? data.e2e[data.e2e.length - 1].duration.toFixed(1) : '',
+      data.eventLoopLag?.lag ?? data.eventLoopLag?.value ?? '',
+      data.paintTiming?.fp ?? data.paintTiming?.firstPaint ?? '',
+      data.paintTiming?.fcp ?? data.paintTiming?.firstContentfulPaint ?? '',
+      (Array.isArray(data.navigationTiming?.metrics) && data.navigationTiming.metrics.find(m => m.name === 'domComplete')) ?
+        data.navigationTiming.metrics.find(m => m.name === 'domComplete').value.toFixed(1) : (data.navigationTiming?.domComplete ?? ''),
+      (Array.isArray(data.navigationTiming?.metrics) && data.navigationTiming.metrics.find(m => m.name === 'loadEventEnd')) ?
+        data.navigationTiming.metrics.find(m => m.name === 'loadEventEnd').value.toFixed(1) : (data.navigationTiming?.loadEventEnd ?? '')
     ]);
 
     console.log('Generated CSV rows:', rows); // Debug log

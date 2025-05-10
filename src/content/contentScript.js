@@ -18,7 +18,10 @@ class PerformanceCollector {
             serverTiming: [],
             websocket: [],
             storage: [],
-            performanceMetrics: []
+            performanceMetrics: [],
+            eventLoopLag: [],
+            paintTiming: [],
+            navigationTiming: []
         };
         this.isActive = true; // Add a flag to track if the collector is active
         this._trackedListeners = new WeakMap(); // Add tracker for event listeners
@@ -44,6 +47,9 @@ class PerformanceCollector {
         this.collectWebsocketMetrics();
         this.collectStorageMetrics();
         this.collectPerformanceMetrics();
+        this.collectEventLoopLag();
+        this.collectPaintTiming();
+        this.collectNavigationTiming();
 
         setInterval(() => this.sendUpdates(), 1000);
 
@@ -124,7 +130,10 @@ class PerformanceCollector {
                 timestamp: Date.now()
             },
             storage: this.performanceData.storage.slice(-1)[0] || { localStorage: 0, sessionStorage: 0, indexedDB: 0, cacheStorage: 0, total: 0, quota: 50 * 1024 * 1024, details: {} },
-            performanceMetrics: this.performanceData.performanceMetrics.slice(-1)[0] || { entries: [] }
+            performanceMetrics: this.performanceData.performanceMetrics.slice(-1)[0] || { entries: [] },
+            eventLoopLag: this.performanceData.eventLoopLag.slice(-1)[0] || { value: 0, timestamp: Date.now() },
+            paintTiming: this.performanceData.paintTiming.slice(-1)[0] || { firstPaint: 0, firstContentfulPaint: 0, timestamp: Date.now() },
+            navigationTiming: this.performanceData.navigationTiming.slice(-1)[0] || { domComplete: 0, loadEventEnd: 0, timestamp: Date.now() }
         };
 
         try {
@@ -274,10 +283,10 @@ class PerformanceCollector {
             'keydown', 'keyup', 'keypress', 'submit', 'change', 'focus', 'blur', 'scroll', 'resize',
             'touchstart', 'touchend', 'touchmove'
         ];
-        
+
         let count = 0;
         const elements = document.getElementsByTagName('*');
-        
+
         for (const element of elements) {
             // Count inline event handlers
             for (const event of commonEvents) {
@@ -285,7 +294,7 @@ class PerformanceCollector {
                     count++;
                 }
             }
-            
+
             // Count jQuery events if jQuery is present
             if (window.jQuery && jQuery._data) {
                 const events = jQuery._data(element, 'events');
@@ -293,14 +302,14 @@ class PerformanceCollector {
                     count += Object.values(events).reduce((acc, val) => acc + val.length, 0);
                 }
             }
-            
+
             // Count tracked listeners
             const tracked = this._trackedListeners.get(element);
             if (tracked) {
                 count += tracked.size;
             }
         }
-        
+
         return count;
     }
 
@@ -310,7 +319,7 @@ class PerformanceCollector {
         const originalRemoveEventListener = EventTarget.prototype.removeEventListener;
         const self = this;
 
-        EventTarget.prototype.addEventListener = function(type, listener, options) {
+        EventTarget.prototype.addEventListener = function (type, listener, options) {
             if (!self._trackedListeners.has(this)) {
                 self._trackedListeners.set(this, new Set());
             }
@@ -318,7 +327,7 @@ class PerformanceCollector {
             return originalAddEventListener.call(this, type, listener, options);
         };
 
-        EventTarget.prototype.removeEventListener = function(type, listener, options) {
+        EventTarget.prototype.removeEventListener = function (type, listener, options) {
             if (self._trackedListeners.has(this)) {
                 self._trackedListeners.get(this).delete(type);
             }
@@ -425,14 +434,14 @@ class PerformanceCollector {
                         if (attr.containerName) details.push(attr.containerName);
                         if (attr.containerId) details.push(`id:${attr.containerId}`);
                         if (attr.name && attr.name !== 'unknown') details.push(attr.name);
-                        
+
                         // Include script source if available
                         if (attr.scriptName) {
                             const scriptParts = attr.scriptName.split('/');
                             details.push(scriptParts[scriptParts.length - 1]); // Get just the filename
                         }
 
-                        taskDetails.name = details.length > 0 
+                        taskDetails.name = details.length > 0
                             ? details.join(' - ')
                             : `Task (${Math.round(entry.duration)}ms)`;
                     } else {
@@ -575,7 +584,7 @@ class PerformanceCollector {
                     for (const name of cacheNames) {
                         const cache = await caches.open(name);
                         const requests = await cache.keys();
-                        
+
                         for (const request of requests) {
                             const response = await cache.match(request);
                             if (response) {
@@ -678,13 +687,13 @@ class PerformanceCollector {
                         duration: metric.duration || 0,
                         description: metric.description || ''
                     }));
-                    
+
                     currentServerTiming.metrics.push(...metrics);
                     currentServerTiming.timestamp = Date.now();
-                    
+
                     // Update the performance data
                     this.performanceData.serverTiming = [currentServerTiming];
-                    
+
                     console.log('Server Timing collected:', currentServerTiming);
                 }
             });
@@ -700,10 +709,10 @@ class PerformanceCollector {
     collectWebsocketMetrics() {
         const self = this;
         const connections = new Map();
-        
+
         // Proxy the WebSocket constructor
         const OriginalWebSocket = window.WebSocket;
-        window.WebSocket = function(url, protocols) {
+        window.WebSocket = function (url, protocols) {
             const ws = new OriginalWebSocket(url, protocols);
             const wsInfo = {
                 url,
@@ -714,39 +723,39 @@ class PerformanceCollector {
                 status: 'connecting',
                 startTime: Date.now()
             };
-            
+
             connections.set(ws, wsInfo);
-            
+
             ws.addEventListener('open', () => {
                 wsInfo.status = 'open';
                 self.updateWebsocketData();
             });
-            
+
             ws.addEventListener('close', () => {
                 wsInfo.status = 'closed';
                 self.updateWebsocketData();
             });
-            
+
             ws.addEventListener('message', (event) => {
                 wsInfo.messagesReceived++;
                 wsInfo.bytesReceived += event.data?.length || 0;
                 self.updateWebsocketData();
             });
-            
+
             ws.addEventListener('error', () => {
                 wsInfo.status = 'error';
                 self.updateWebsocketData();
             });
-            
+
             // Wrap send method to track outgoing messages
             const originalSend = ws.send;
-            ws.send = function(data) {
+            ws.send = function (data) {
                 wsInfo.messagesSent++;
                 wsInfo.bytesSent += data?.length || 0;
                 self.updateWebsocketData();
                 return originalSend.call(this, data);
             };
-            
+
             self.updateWebsocketData();
             return ws;
         };
@@ -763,7 +772,7 @@ class PerformanceCollector {
                 })),
                 timestamp: Date.now()
             };
-            
+
             this.performanceData.websocket = [wsData];
             console.log('WebSocket data updated:', wsData);
         };
@@ -814,9 +823,9 @@ class PerformanceCollector {
                 const startMark = `test-start-${Date.now()}`;
                 const endMark = `test-end-${Date.now()}`;
                 const measureName = `test-measure-${Date.now()}`;
-                
+
                 performance.mark(startMark);
-                
+
                 setTimeout(() => {
                     performance.mark(endMark);
                     performance.measure(measureName, startMark, endMark);
@@ -848,6 +857,66 @@ class PerformanceCollector {
         }
     }
 
+    collectEventLoopLag() {
+        setInterval(() => {
+            const start = performance.now();
+            setTimeout(() => {
+                const end = performance.now();
+                const lag = end - start - 100; // Subtract the expected delay
+                this.performanceData.eventLoopLag.push({
+                    value: lag,
+                    timestamp: Date.now()
+                });
+            }, 100);
+        }, 1000);
+    }
+
+    collectPaintTiming() {
+        try {
+            const observer = new PerformanceObserver((list) => {
+                const entries = list.getEntries();
+                entries.forEach(entry => {
+                    if (entry.name === 'first-paint') {
+                        this.performanceData.paintTiming.push({
+                            firstPaint: entry.startTime,
+                            firstContentfulPaint: 0,
+                            timestamp: Date.now()
+                        });
+                    }
+                    if (entry.name === 'first-contentful-paint') {
+                        const lastEntry = this.performanceData.paintTiming[this.performanceData.paintTiming.length - 1];
+                        if (lastEntry) {
+                            lastEntry.firstContentfulPaint = entry.startTime;
+                        }
+                    }
+                });
+            });
+            observer.observe({ entryTypes: ['paint'] });
+        } catch (e) {
+            console.error('Error in collectPaintTiming:', e);
+        }
+    }
+
+    collectNavigationTiming() {
+        try {
+            const observer = new PerformanceObserver((list) => {
+                const entries = list.getEntries();
+                entries.forEach(entry => {
+                    if (entry.entryType === 'navigation') {
+                        this.performanceData.navigationTiming.push({
+                            domComplete: entry.domComplete,
+                            loadEventEnd: entry.loadEventEnd,
+                            timestamp: Date.now()
+                        });
+                    }
+                });
+            });
+            observer.observe({ entryTypes: ['navigation'] });
+        } catch (e) {
+            console.error('Error in collectNavigationTiming:', e);
+        }
+    }
+
     getStorageSize(storage) {
         let size = 0;
         try {
@@ -871,7 +940,19 @@ class PerformanceCollector {
 
 // Initialize immediately
 try {
-    new PerformanceCollector();
+    const performanceCollector = new PerformanceCollector();
+
+    // When you receive a snapshot from PerformanceCollector:
+    window.performanceCollector = performanceCollector;
+    window.performanceCollector.addListener((snapshot) => {
+        // Relay ALL fields, including new ones, to the background/devtools
+        chrome.runtime.sendMessage({
+            type: 'metrics-update',
+            data: {
+                ...snapshot // This will include eventLoopLag, paintTiming, navigationTiming, etc.
+            }
+        });
+    });
 } catch (e) {
     console.error('Error initializing PerformanceCollector:', e);
 }

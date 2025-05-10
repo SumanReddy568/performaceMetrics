@@ -55,7 +55,7 @@
 }
 
 .panel-disabled.panel-coming-soon::before {
-    content: "Coming in v1.0.5";
+    content: "Coming in v1.0.6";
     position: absolute;
     top: 50%;
     left: 50%;

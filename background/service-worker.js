@@ -5,10 +5,10 @@ function logConnections() {
     console.log('Active connections:', Array.from(connections.keys()));
 }
 
-chrome.runtime.onConnect.addListener(function(port) {
+chrome.runtime.onConnect.addListener(function (port) {
     if (port.name !== "devtools") return;
 
-    const extensionListener = function(message) {
+    const extensionListener = function (message) {
         if (message.type === "init") {
             const tabId = message.tabId;
             connections.set(tabId, port);
@@ -26,7 +26,7 @@ chrome.runtime.onConnect.addListener(function(port) {
     };
 
     port.onMessage.addListener(extensionListener);
-    port.onDisconnect.addListener(function(port) {
+    port.onDisconnect.addListener(function (port) {
         port.onMessage.removeListener(extensionListener);
         for (let [tabId, conn] of connections.entries()) {
             if (conn === port) {
@@ -52,6 +52,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
 });
 
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg.type === 'metrics-update') {
+        // Forward all fields to devtools
+        chrome.runtime.sendMessage({
+            type: 'metrics-update',
+            data: { ...msg.data }
+        });
+    }
+});
+
 function keepAlive() {
     setTimeout(keepAlive, 20 * 1000);
 }
@@ -68,7 +78,7 @@ chrome.runtime.onStartup.addListener(() => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'api-performance-update') {
-        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs[0]) {
                 chrome.tabs.sendMessage(tabs[0].id, message);
             }

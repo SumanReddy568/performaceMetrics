@@ -416,6 +416,10 @@ class PerformanceMetricsDevTools {
       this.panels.storage = new StoragePanel('storagePanel');
       this.panels.performanceMetrics = new PerformanceMetricsPanel('performanceMetricsPanel');
       this.panels.userInteraction = new UserInteractionPanel('userInteractionPanel');
+      this.panels.eventLoopLag = new EventLoopLagPanel('eventLoopLagPanel');
+      this.panels.paintTiming = new PaintTimingPanel('paintTimingPanel');
+      this.panels.navigationTiming = new NavigationTimingPanel('navigationTimingPanel');
+      this.panels.e2e = new E2EPanel('e2ePanel');
 
     } catch (e) {
       console.error("Error loading panels:", e);
@@ -516,6 +520,13 @@ class PerformanceMetricsDevTools {
       if (data.storage) safeUpdatePanel(this.panels.storage, data.storage);
       if (data.performanceMetrics) safeUpdatePanel(this.panels.performanceMetrics, data.performanceMetrics);
       if (data.userInteraction) safeUpdatePanel(this.panels.userInteraction, data.userInteraction);
+      if (data.eventLoopLag) safeUpdatePanel(this.panels.eventLoopLag, data.eventLoopLag);
+      if (data.paintTiming) safeUpdatePanel(this.panels.paintTiming, data.paintTiming);
+      if (data.navigationTiming) safeUpdatePanel(this.panels.navigationTiming, data.navigationTiming);
+      if (data.e2e) safeUpdatePanel(this.panels.e2e, data.e2e);
+
+      // Auto-arrange panels after updating
+      this.autoArrangePanels(data);
 
       // Force check all panels after short delay to ensure timeout works
       setTimeout(() => {
@@ -528,6 +539,85 @@ class PerformanceMetricsDevTools {
 
     } catch (e) {
       console.error("Error updating panels:", e);
+    }
+  }
+
+  autoArrangePanels(data) {
+    // Panel keys and their DOM ids (order as in HTML)
+    const panelKeyToId = [
+      ['fps', 'fpsPanel'],
+      ['memory', 'memoryPanel'],
+      ['network', 'networkPanel'],
+      ['cpu', 'cpuPanel'],
+      ['dom', 'domPanel'],
+      ['jsHeap', 'jsHeapPanel'],
+      ['layoutShifts', 'layoutShiftsPanel'],
+      ['resourceTiming', 'resourceTimingPanel'],
+      ['firstPaint', 'firstPaintPanel'],
+      ['pageLoad', 'pageLoadPanel'],
+      ['longTasks', 'longTasksPanel'],
+      ['userInteraction', 'userInteractionPanel'],
+      ['webVitals', 'webVitalsPanel'],
+      ['performanceMetrics', 'performanceMetricsPanel'],
+      ['storage', 'storagePanel'],
+      ['cacheUsage', 'cacheUsagePanel'],
+      ['pageErrors', 'pageErrorsPanel'],
+      ['serverTiming', 'serverTimingPanel'],
+      ['websocket', 'websocketPanel'],
+      ['eventLoopLag', 'eventLoopLagPanel'],
+      ['paintTiming', 'paintTimingPanel'],
+      ['navigationTiming', 'navigationTimingPanel'],
+      ['e2e', 'e2ePanel'],
+      // API Performance panel will always be last
+      ['apiPerformance', 'apiPerformancePanel']
+    ];
+
+    const panelContainer = document.querySelector('.panel-container');
+    if (!panelContainer) return;
+ 
+    const panelsWithData = [];
+    const panelsWithoutData = [];
+    let apiPanelElem = null;
+
+    panelKeyToId.forEach(([panelKey, panelId]) => {
+      const panelData = data[panelKey];
+      const panelElem = document.getElementById(panelId);
+      if (!panelElem) return;
+
+      if (panelKey === 'apiPerformance') {
+        apiPanelElem = panelElem;
+        return; // Always move API Performance panel to last
+      }
+
+      // Heuristic: consider panel has data if it's not null/undefined/empty
+      let hasData = false;
+      if (panelData !== undefined && panelData !== null) {
+        if (Array.isArray(panelData)) {
+          hasData = panelData.length > 0;
+        } else if (typeof panelData === 'object') {
+          hasData = Object.values(panelData).some(
+            v => v !== null && v !== undefined && v !== 0 && v !== '' && !(Array.isArray(v) && v.length === 0)
+          );
+        } else {
+          hasData = !!panelData;
+        }
+      }
+
+      if (hasData) {
+        panelsWithData.push(panelElem);
+      } else {
+        panelsWithoutData.push(panelElem);
+      }
+    });
+
+    // Reorder: with data at the top, without data next, API Performance always last
+    [...panelsWithData, ...panelsWithoutData].forEach(panelElem => {
+      if (panelElem && panelElem.parentNode === panelContainer) {
+        panelContainer.appendChild(panelElem);
+      }
+    });
+    if (apiPanelElem && apiPanelElem.parentNode === panelContainer) {
+      panelContainer.appendChild(apiPanelElem);
     }
   }
 
@@ -862,7 +952,13 @@ document.addEventListener('DOMContentLoaded', function () {
       releaseNotesContent.className = 'release-notes-content';
 
       releaseNotesContent.innerHTML = `
-                <h3>Version 1.0.3 (Current)</h3>
+                <h3>Version 1.0.5 (Current)</h3>
+                <ul>
+                    <li class="feature">New pannels</li>
+                    <li class="improvement">Auto Arrange pannels based on data</li>
+                    <li class="improvement">Export Functionality</li>
+                </ul>
+                <h3>Version 1.0.3</h3>
                 <ul>
                     <li class="feature">Added server timing metrics visualization</li>
                     <li class="improvement">Improved memory usage tracking accuracy</li>
@@ -879,20 +975,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     <li class="feature">Added storage usage monitoring</li>
                 </ul>
                 
-                <h3>Version 1.0.1</h3>
-                <ul>
-                    <li class="feature">Added Web Vitals metrics</li>
-                    <li class="improvement">Enhanced DOM metrics panel</li>
-                    <li class="bugfix">Fixed memory leak in performance monitoring</li>
-                </ul>
+                // <h3>Version 1.0.1</h3>
+                // <ul>
+                //     <li class="feature">Added Web Vitals metrics</li>
+                //     <li class="improvement">Enhanced DOM metrics panel</li>
+                //     <li class="bugfix">Fixed memory leak in performance monitoring</li>
+                // </ul>
                 
-                <h3>Version 1.0.0</h3>
-                <ul>
-                    <li class="feature">Initial release with core performance metrics</li>
-                    <li class="feature">Real-time FPS monitoring</li>
-                    <li class="feature">Memory usage tracking</li>
-                    <li class="feature">Network requests monitoring</li>
-                </ul>
+                // <h3>Version 1.0.0</h3>
+                // <ul>
+                //     <li class="feature">Initial release with core performance metrics</li>
+                //     <li class="feature">Real-time FPS monitoring</li>
+                //     <li class="feature">Memory usage tracking</li>
+                //     <li class="feature">Network requests monitoring</li>
+                // </ul>
             `;
 
       modalContent.appendChild(modalHeader);
