@@ -1,6 +1,9 @@
 ## [1.0.5] - 2025-05-11
 - chrome store rejection fix
 
+## [1.0.5] - 2025-05-11
+- chrome store rejection fix
+
 ## [1.0.5] - 2025-05-10
 - new pannels
 
