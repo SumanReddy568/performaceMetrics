@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Performance Metrics",
-  "version": "1.0.5",
-  "description": "Advanced performance metrics dashboard for web pages",
+  "version": "1.0.4",
+  "description": "Advanced performance metrics dashboard for web pages with an interactive Performance Assistant (chatbot) to help analyze metrics and provide insights. Monitor real-time performance data including CPU, memory, network activity, Web Vitals, and more.",
   "devtools_page": "/src/devtools/devtools.html",
   "icons": {
     "16": "icons/icon16.png",
