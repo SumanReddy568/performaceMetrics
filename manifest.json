@@ -2,7 +2,6 @@
   "manifest_version": 3,
   "name": "Performance Metrics",
   "version": "1.0.5",
-  "description": "Performance metrics dashboard with chatbot assistant",
   "devtools_page": "/src/devtools/devtools.html",
   "icons": {
     "16": "icons/icon16.png",
