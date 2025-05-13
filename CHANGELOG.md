@@ -1,3 +1,6 @@
+## [1.0.5] - 2025-05-13
+- rejection fix
+
 ## [1.0.6] - 2025-05-11
 - chrome store rejection fix
 
