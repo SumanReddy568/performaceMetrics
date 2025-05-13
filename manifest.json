@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Performance Metrics",
-  "description": "A browser extension that provides performance metrics and acts as a Performance Assistant to help analyze and optimize website performance.",
-  "version": "1.0.5",
+  "description": "Provides performance metrics and acts as a Performance Assistant to optimize website performance.",
+  "version": "1.0.4",
   "devtools_page": "/src/devtools/devtools.html",
   "icons": {
     "16": "icons/icon16.png",
@@ -10,14 +10,7 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "action": {
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "32": "icons/icon32.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
-    }
-  },
+  "action": {},
   "permissions": [
     "storage",
     "tabs",
