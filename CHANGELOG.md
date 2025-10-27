@@ -1,3 +1,6 @@
+## [1.0.7] - 2025-10-27
+- icons change
+
 ## [1.0.6] - 2025-10-27
 - new feedback changes
 
