@@ -75,23 +75,23 @@
           <span class="metric-label">Chrome:</span>
           <span class="metric-value" id="chrome-version">--</span>
         </div>
-        <div class="metric-item">
+        <!-- <div class="metric-item">
           <span class="metric-label">Windows:</span>
           <span class="metric-value" id="chrome-windows">--</span>
-        </div>
-        <div class="metric-item">
+        </div> -->
+        <!-- <div class="metric-item">
           <span class="metric-label">Tabs:</span>
           <span class="metric-value" id="chrome-tabs">--</span>
-        </div>
+        </div> -->
         <div class="metric-item">
           <div class="metric-indicator" id="network-indicator"></div>
           <span class="metric-label">Network:</span>
           <span class="metric-value" id="network-status">--</span>
         </div>
-        <div class="metric-item">
+        <!-- <div class="metric-item">
           <span class="metric-label">Req/s:</span>
           <span class="metric-value" id="requests-per-sec">--</span>
-        </div>
+        </div> -->
         <div class="metric-item">
           <span class="metric-label">Memory:</span>
           <span class="metric-value" id="system-memory">--</span>
@@ -130,6 +130,41 @@
     </main>
     <div id="chatbot-container"></div>
   </div>
+
+  <!-- Feedback Popup Modal -->
+  <div class="feedback-modal-overlay" id="feedbackModal">
+    <div class="feedback-modal-content">
+      <button class="feedback-modal-close" id="closeFeedbackModal">&times;</button>
+      <h2 class="feedback-modal-title">Welcome to Performance Metrics! 🎉</h2>
+      <p class="feedback-modal-description">Help us improve by trying our new features and sharing your feedback.</p>
+      <div class="feedback-banners">
+        <a href="https://ailqaagents.netlify.app/performance" target="_blank" class="feedback-promo-banner"
+          id="tryAiTool">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2l2.4 7.4h7.6l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4-6.2-4.5h7.6z"></path>
+          </svg>
+          <span class="banner-text">Try our AI Powered Web Performance Testing Tool</span>
+          <svg class="arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfXZFOzldNdQZL53p_AQR1tgTyTTuQ_OnNr41AM9U8sv_e1Rg/viewform?usp=dialog"
+          target="_blank" class="feedback-promo-banner" id="rateUs">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2l2.4 7.4h7.6l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4-6.2-4.5h7.6z"></path>
+          </svg>
+          <span class="banner-text">Rate Us ⭐</span>
+          <svg class="arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+      <button class="feedback-later-btn" id="remindLater">Remind Me Later</button>
+    </div>
+  </div>
+
   <script src="/lib/web-vitals.js"></script>
   <script src="/src/utils/metricsProvider.js"></script>
   <script src="/src/utils/chatBot.js"></script>
@@ -162,6 +197,7 @@
   <script src="/src/panels/navigationTimingPanel/navigationTimingPanel.js"></script>
   <script src="/src/panels/e2ePanel/e2ePanel.js"></script>
   <script src="devtools.js"></script>
+  <script src="/src/utils/feedbackPopup.js"></script>
 </body>
 
 </html>
