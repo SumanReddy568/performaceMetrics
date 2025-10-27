@@ -1,3 +1,6 @@
+## [1.0.6] - 2025-10-27
+- new feedback changes
+
 ## [1.0.5] - 2025-05-17
 - rejection fix for decription
 
