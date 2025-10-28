@@ -438,8 +438,8 @@ class PerformanceCollector {
           timestamp: performance.now()
         });
 
-        console.log('API Performance collected:', apiCalls);
-        console.log('Network metrics:', { requests, transferred });
+        // console.log('API Performance collected:', apiCalls);
+        // console.log('Network metrics:', { requests, transferred });
       }
 
       requests = 0;

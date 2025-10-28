@@ -88,11 +88,11 @@ class APIPerformancePanel extends BasePanel {
     }
     this.updateLastActivity();
 
-    console.log('API Performance panel update called with data:', data);
+    // console.log('API Performance panel update called with data:', data);
 
     // Update internal data store
     this.data = data.slice(-this.maxDataPoints);
-    console.log('Updated internal data store with', this.data.length, 'items');
+    // console.log('Updated internal data store with', this.data.length, 'items');
 
     // Sort APIs by duration
     const sortedData = [...this.data].sort((a, b) => b.duration - a.duration);
@@ -164,9 +164,9 @@ class APIPerformancePanel extends BasePanel {
         document.head.appendChild(style);
       }
       
-      console.log('API list updated successfully, this is working');
+      // console.log('API list updated successfully, this is working');
     } catch (e) {
-      console.error('Error updating API list:', e);
+      // console.error('Error updating API list:', e);
     }
   }
 
