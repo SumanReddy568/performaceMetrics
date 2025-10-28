@@ -1,3 +1,6 @@
+## [1.0.9] - 2025-10-28
+- remove console triggers
+
 ## [1.0.8] - 2025-10-27
 - icon change
 
