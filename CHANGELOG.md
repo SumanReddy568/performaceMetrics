@@ -1,3 +1,6 @@
+## [1.1.0] - 2025-11-07
+- Remove consloe log
+
 ## [1.0.9] - 2025-10-28
 - remove console triggers
 
