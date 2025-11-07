@@ -373,13 +373,13 @@ class PerformanceCollector {
                             fcp: 0,
                             timestamp: Date.now()
                         });
-                        console.log('First Paint collected:', entry.startTime);
+                        // console.log('First Paint collected:', entry.startTime);
                     }
                     if (entry.name === 'first-contentful-paint') {
                         const lastEntry = this.performanceData.firstPaint[this.performanceData.firstPaint.length - 1];
                         if (lastEntry) {
                             lastEntry.fcp = entry.startTime;
-                            console.log('First Contentful Paint collected:', entry.startTime);
+                            // console.log('First Contentful Paint collected:', entry.startTime);
                         }
                     }
                 });
@@ -399,7 +399,7 @@ class PerformanceCollector {
                     windowLoadTime: 0,
                     timestamp: Date.now()
                 });
-                console.log('DOM Load Time collected:', domLoadTime);
+                // console.log('DOM Load Time collected:', domLoadTime);
             });
 
             window.addEventListener('load', (event) => {
@@ -407,7 +407,7 @@ class PerformanceCollector {
                 const lastEntry = this.performanceData.pageLoad[this.performanceData.pageLoad.length - 1];
                 if (lastEntry) {
                     lastEntry.windowLoadTime = windowLoadTime;
-                    console.log('Window Load Time collected:', windowLoadTime);
+                    // console.log('Window Load Time collected:', windowLoadTime);
                 }
             });
         } catch (e) {
@@ -449,7 +449,7 @@ class PerformanceCollector {
                     }
 
                     this.performanceData.longTasks.push(taskDetails);
-                    console.log('Long Task collected:', taskDetails);
+                    // console.log('Long Task collected:', taskDetails);
                 });
             });
             observer.observe({ entryTypes: ['longtask'] });
@@ -523,11 +523,11 @@ class PerformanceCollector {
 
         // Make a test API call after a short delay
         setTimeout(() => {
-            console.log('Making test API call from content script');
+            // console.log('Making test API call from content script');
             fetch('https://jsonplaceholder.typicode.com/posts/1')
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Content script API test success:', data);
+                    // console.log('Content script API test success:', data);
                     // Manually send this API call to ensure it's captured
                     try {
                         chrome.runtime.sendMessage({
@@ -616,7 +616,7 @@ class PerformanceCollector {
             // Access web vitals from the global object
             if (typeof window.webVitals !== 'undefined') {
                 window.webVitals.onLCP(metric => {
-                    console.log('LCP:', metric.value);
+                    // console.log('LCP:', metric.value);
                     this.performanceData.webVitals.push({
                         lcp: metric.value,
                         fid: this.performanceData.webVitals.slice(-1)[0]?.fid || 0,
@@ -626,7 +626,7 @@ class PerformanceCollector {
                 });
 
                 window.webVitals.onFID(metric => {
-                    console.log('FID:', metric.value);
+                    // console.log('FID:', metric.value);
                     this.performanceData.webVitals.push({
                         lcp: this.performanceData.webVitals.slice(-1)[0]?.lcp || 0,
                         fid: metric.value,
@@ -636,7 +636,7 @@ class PerformanceCollector {
                 });
 
                 window.webVitals.onCLS(metric => {
-                    console.log('CLS:', metric.value);
+                    // console.log('CLS:', metric.value);
                     this.performanceData.webVitals.push({
                         lcp: this.performanceData.webVitals.slice(-1)[0]?.lcp || 0,
                         fid: this.performanceData.webVitals.slice(-1)[0]?.fid || 0,
@@ -694,7 +694,7 @@ class PerformanceCollector {
                     // Update the performance data
                     this.performanceData.serverTiming = [currentServerTiming];
 
-                    console.log('Server Timing collected:', currentServerTiming);
+                    // console.log('Server Timing collected:', currentServerTiming);
                 }
             });
         });
@@ -774,7 +774,7 @@ class PerformanceCollector {
             };
 
             this.performanceData.websocket = [wsData];
-            console.log('WebSocket data updated:', wsData);
+            // console.log('WebSocket data updated:', wsData);
         };
     }
 
@@ -847,7 +847,7 @@ class PerformanceCollector {
                         entries,
                         timestamp: Date.now()
                     }];
-                    console.log('Performance metrics collected:', entries);
+                    // console.log('Performance metrics collected:', entries);
                 }
             });
 
