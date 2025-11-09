@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Performance Metrics",
   "description": "Displays system performance metrics (CPU & Memory) directly on the toolbar icon and integrates with DevTools for deeper insights.",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "devtools_page": "src/devtools/devtools.html",
   "icons": {
     "16": "icons/icon16.png",
@@ -34,7 +34,9 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "<all_urls>"
+      ],
       "js": [
         "lib/web-vitals.js",
         "src/content/contentScript.js"
@@ -42,15 +44,24 @@
       "run_at": "document_start"
     },
     {
-      "matches": ["<all_urls>"],
-      "js": ["src/content/interactions.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/content/interactions.js"
+      ],
       "run_at": "document_start"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["src/*", "lib/*"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "src/*",
+        "lib/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

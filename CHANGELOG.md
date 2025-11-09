@@ -1,3 +1,6 @@
+## [1.1.3] - 2025-11-09
+- Adding icon metrics
+
 ## [1.1.0] - 2025-11-07
 - Remove consloe log
 
