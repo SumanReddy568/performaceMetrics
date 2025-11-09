@@ -1,16 +1,24 @@
 {
   "manifest_version": 3,
   "name": "Performance Metrics",
-  "description": "Displays website performance metrics and provides a chatbot interface to query real-time performance data",
-  "version": "1.1.0",
-  "devtools_page": "/src/devtools/devtools.html",
+  "description": "Displays system performance metrics (CPU & Memory) directly on the toolbar icon and integrates with DevTools for deeper insights.",
+  "version": "1.1.2",
+  "devtools_page": "src/devtools/devtools.html",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "action": {},
+  "action": {
+    "default_title": "Performance Metrics",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
   "permissions": [
     "storage",
     "tabs",
@@ -18,40 +26,31 @@
     "system.cpu",
     "system.memory"
   ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "src/*",
-        "lib/*"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
-    }
+  "host_permissions": [
+    "<all_urls>"
   ],
   "background": {
-    "service_worker": "/background/service-worker.js"
+    "service_worker": "background/service-worker.js"
   },
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
+      "matches": ["<all_urls>"],
       "js": [
         "lib/web-vitals.js",
-        "/src/content/contentScript.js"
-      ],
-      "run_at": "document_start",
-      "all_frames": false
-    },
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "src/content/interactions.js"
+        "src/content/contentScript.js"
       ],
       "run_at": "document_start"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/interactions.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/*", "lib/*"],
+      "matches": ["<all_urls>"]
     }
   ]
 }

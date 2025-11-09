@@ -25,6 +25,7 @@ class PerformanceCollector {
         };
         this.isActive = true; // Add a flag to track if the collector is active
         this._trackedListeners = new WeakMap(); // Add tracker for event listeners
+        this.listeners = []; // Add listeners array for callback notifications
         this.init();
     }
 
@@ -136,6 +137,16 @@ class PerformanceCollector {
             navigationTiming: this.performanceData.navigationTiming.slice(-1)[0] || { domComplete: 0, loadEventEnd: 0, timestamp: Date.now() }
         };
 
+        // Notify all listeners
+        this.listeners.forEach(callback => {
+            try {
+                callback(snapshot);
+            } catch (e) {
+                console.error('Error in listener callback:', e);
+            }
+        });
+
+        // Also send message directly (for backward compatibility)
         try {
             chrome.runtime.sendMessage({
                 type: 'metrics-update',
@@ -144,6 +155,23 @@ class PerformanceCollector {
         } catch (e) {
             console.error('Error sending message to extension:', e);
             this.isActive = false; // Deactivate the collector if the context is invalidated
+        }
+    }
+
+    // Add listener method
+    addListener(callback) {
+        if (typeof callback === 'function') {
+            this.listeners.push(callback);
+        } else {
+            console.warn('addListener: callback must be a function');
+        }
+    }
+
+    // Remove listener method (optional, for cleanup)
+    removeListener(callback) {
+        const index = this.listeners.indexOf(callback);
+        if (index > -1) {
+            this.listeners.splice(index, 1);
         }
     }
 
