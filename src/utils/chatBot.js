@@ -156,10 +156,10 @@ class PerformanceMetricsChatBot {
       "Show cache usage",                    // cacheUsagePanel
       "Any page errors?",                    // pageErrorsPanel
       "Show server timing",                  // serverTimingPanel
-      "Check websocket status",              // websocketPanel
-      "Show API performance"                 // apiPerformancePanel
+      "Check websocket status"              // websocketPanel
     ];
-    
+
+
     // Track help panel state
     this.helpPanelOpen = false;
 
@@ -168,7 +168,7 @@ class PerformanceMetricsChatBot {
       type: 'default',
       message: "Click the help button to see available options.",
     });
-    
+
     // Create a response for when help is clicked
     this.getHelpResponse = () => ({
       type: 'suggestions',
@@ -191,7 +191,7 @@ class PerformanceMetricsChatBot {
     this.helpPanelOpen = true;
     return this.getHelpResponse();
   }
-  
+
   /**
    * Handle question selection to close help panel
    */
@@ -232,7 +232,7 @@ class PerformanceMetricsChatBot {
 
     // Show typing indicator immediately
     this.showTypingIndicator();
-    
+
     try {
       // Ensure question is a string
       if (typeof question !== 'string') {
@@ -264,10 +264,10 @@ class PerformanceMetricsChatBot {
           try {
             // Add slight delay to make typing indicator visible (optional)
             await new Promise(resolve => setTimeout(resolve, 500));
-            
+
             const response = await pattern.handler();
             this.hideTypingIndicator();
-            
+
             // Handle case where handler didn't return a response
             if (!response) {
               return {
@@ -275,7 +275,7 @@ class PerformanceMetricsChatBot {
                 message: "I don't have enough data to answer that question right now."
               };
             }
-            
+
             return response;
           } catch (error) {
             console.error("Error processing pattern match:", error);
@@ -329,9 +329,9 @@ class PerformanceMetricsChatBot {
         type: 'metrics',
         metricType: 'cpu',
         message: `CPU Metrics:\n` +
-                `• Current Usage: ${currentUsage.toFixed(1)}%\n` +
-                `• Average Usage: ${average.toFixed(1)}%\n` +
-                `• Samples: ${historicalData.length}`,
+          `• Current Usage: ${currentUsage.toFixed(1)}%\n` +
+          `• Average Usage: ${average.toFixed(1)}%\n` +
+          `• Samples: ${historicalData.length}`,
         data: {
           current: currentUsage,
           average: average,
@@ -398,7 +398,7 @@ class PerformanceMetricsChatBot {
     return {
       type: 'metrics',
       metricType: 'network',
-      message: `Active Requests: ${requests}\nData Transferred: ${(transferred/1024).toFixed(2)} KB\nAvg Requests/min: ${avgRequests.toFixed(1)}`,
+      message: `Active Requests: ${requests}\nData Transferred: ${(transferred / 1024).toFixed(2)} KB\nAvg Requests/min: ${avgRequests.toFixed(1)}`,
       data: {
         requests: requests,
         transferred: transferred,
@@ -432,9 +432,9 @@ class PerformanceMetricsChatBot {
       type: 'metrics',
       metricType: 'dom',
       message: `DOM Metrics:\n` +
-              `• Total Elements: ${snapshot.dom.elements}\n` +
-              `• Total Nodes: ${snapshot.dom.nodes}\n` +
-              `• Event Listeners: ${snapshot.dom.listeners}`,
+        `• Total Elements: ${snapshot.dom.elements}\n` +
+        `• Total Nodes: ${snapshot.dom.nodes}\n` +
+        `• Event Listeners: ${snapshot.dom.listeners}`,
       data: snapshot.dom
     };
   }
@@ -453,9 +453,9 @@ class PerformanceMetricsChatBot {
       type: 'metrics',
       metricType: 'jsHeap',
       message: `JS Heap Usage:\n` +
-              `• Used: ${used} MB\n` +
-              `• Total: ${total} MB\n` +
-              `• Limit: ${limit} MB`,
+        `• Used: ${used} MB\n` +
+        `• Total: ${total} MB\n` +
+        `• Limit: ${limit} MB`,
       data: {
         used: parseFloat(used),
         total: parseFloat(total),
@@ -474,8 +474,8 @@ class PerformanceMetricsChatBot {
       type: 'metrics',
       metricType: 'layoutShifts',
       message: `Layout Stability:\n` +
-              `• CLS Score: ${snapshot.layoutShifts.cumulativeLayoutShift}\n` +
-              `• Recent Shifts: ${snapshot.layoutShifts.recentShifts || 0}`,
+        `• CLS Score: ${snapshot.layoutShifts.cumulativeLayoutShift}\n` +
+        `• Recent Shifts: ${snapshot.layoutShifts.recentShifts || 0}`,
       data: snapshot.layoutShifts
     };
   }
@@ -490,8 +490,8 @@ class PerformanceMetricsChatBot {
       type: 'metrics',
       metricType: 'pageLoad',
       message: `Page Load Times:\n` +
-              `• DOM Load: ${snapshot.pageLoad.domLoadTime}ms\n` +
-              `• Window Load: ${snapshot.pageLoad.windowLoadTime}ms`,
+        `• DOM Load: ${snapshot.pageLoad.domLoadTime}ms\n` +
+        `• Window Load: ${snapshot.pageLoad.windowLoadTime}ms`,
       data: snapshot.pageLoad
     };
   }
@@ -506,9 +506,9 @@ class PerformanceMetricsChatBot {
       type: 'metrics',
       metricType: 'longTasks',
       message: `Long Tasks:\n` +
-              `• Count: ${snapshot.longTasks.count}\n` +
-              `• Average Duration: ${snapshot.longTasks.avgDuration}ms\n` +
-              `• Total Blocking Time: ${snapshot.longTasks.totalBlockingTime}ms`,
+        `• Count: ${snapshot.longTasks.count}\n` +
+        `• Average Duration: ${snapshot.longTasks.avgDuration}ms\n` +
+        `• Total Blocking Time: ${snapshot.longTasks.totalBlockingTime}ms`,
       data: snapshot.longTasks
     };
   }
@@ -523,9 +523,9 @@ class PerformanceMetricsChatBot {
       type: 'metrics',
       metricType: 'userInteractions',
       message: `User Interactions:\n` +
-              `• Clicks: ${snapshot.userInteraction.clicks}\n` +
-              `• Scrolls: ${snapshot.userInteraction.scrolls}\n` +
-              `• Keypresses: ${snapshot.userInteraction.keypresses}`,
+        `• Clicks: ${snapshot.userInteraction.clicks}\n` +
+        `• Scrolls: ${snapshot.userInteraction.scrolls}\n` +
+        `• Keypresses: ${snapshot.userInteraction.keypresses}`,
       data: snapshot.userInteraction
     };
   }
@@ -540,9 +540,9 @@ class PerformanceMetricsChatBot {
       type: 'metrics',
       metricType: 'storage',
       message: `Storage Usage:\n` +
-              `• LocalStorage: ${(snapshot.storage.localStorage / 1024).toFixed(2)} KB\n` +
-              `• SessionStorage: ${(snapshot.storage.sessionStorage / 1024).toFixed(2)} KB\n` +
-              `• IndexedDB: ${(snapshot.storage.indexedDB / 1024 / 1024).toFixed(2)} MB`,
+        `• LocalStorage: ${(snapshot.storage.localStorage / 1024).toFixed(2)} KB\n` +
+        `• SessionStorage: ${(snapshot.storage.sessionStorage / 1024).toFixed(2)} KB\n` +
+        `• IndexedDB: ${(snapshot.storage.indexedDB / 1024 / 1024).toFixed(2)} MB`,
       data: snapshot.storage
     };
   }
@@ -555,7 +555,7 @@ class PerformanceMetricsChatBot {
 
     const resources = snapshot.resourceTiming.resources || [];
     const count = resources.length || 0;
-    
+
     // If no resources are loaded yet
     if (count === 0) {
       return {
@@ -572,11 +572,11 @@ class PerformanceMetricsChatBot {
     // Calculate metrics from available resources
     const loadTimes = resources.map(r => r.duration || 0);
     const averageLoadTime = loadTimes.reduce((a, b) => a + b, 0) / count;
-    
+
     // Sort resources by duration to find slowest
     const sortedResources = [...resources].sort((a, b) => (b.duration || 0) - (a.duration || 0));
     const slowestResource = sortedResources[0];
-    
+
     // Get cached resources
     const cachedResources = resources.filter(r => r.transferSize === 0 || r.fromCache);
     const cachedCount = cachedResources.length;
@@ -585,10 +585,10 @@ class PerformanceMetricsChatBot {
       type: 'metrics',
       metricType: 'resourceTiming',
       message: `Resource Timing:\n` +
-              `• Total Resources: ${count}\n` +
-              `• Average Load Time: ${averageLoadTime.toFixed(2)}ms\n` +
-              `• Slowest Resource: ${slowestResource ? slowestResource.name : 'None'} (${slowestResource ? slowestResource.duration.toFixed(2) : 0}ms)\n` +
-              `• Cached Resources: ${cachedCount} of ${count}`,
+        `• Total Resources: ${count}\n` +
+        `• Average Load Time: ${averageLoadTime.toFixed(2)}ms\n` +
+        `• Slowest Resource: ${slowestResource ? slowestResource.name : 'None'} (${slowestResource ? slowestResource.duration.toFixed(2) : 0}ms)\n` +
+        `• Cached Resources: ${cachedCount} of ${count}`,
       data: {
         count,
         averageLoadTime,
@@ -633,10 +633,10 @@ class PerformanceMetricsChatBot {
       type: 'metrics',
       metricType: 'resourceDetails',
       message: `Resource Details (${resourceType || 'All'}):\n` +
-              details.slice(0, 5).map(r => 
-                `• ${r.name.slice(-30)}: ${r.duration.toFixed(2)}ms ${r.cached ? '(cached)' : ''}`
-              ).join('\n') +
-              (details.length > 5 ? '\n...and ' + (details.length - 5) + ' more' : ''),
+        details.slice(0, 5).map(r =>
+          `• ${r.name.slice(-30)}: ${r.duration.toFixed(2)}ms ${r.cached ? '(cached)' : ''}`
+        ).join('\n') +
+        (details.length > 5 ? '\n...and ' + (details.length - 5) + ' more' : ''),
       data: {
         type: resourceType,
         resources: details
@@ -654,9 +654,9 @@ class PerformanceMetricsChatBot {
       type: 'metrics',
       metricType: 'paintTiming',
       message: `Paint Timing:\n` +
-              `• First Paint: ${snapshot.paintTiming.firstPaint}ms\n` +
-              `• First Contentful Paint: ${snapshot.paintTiming.firstContentfulPaint}ms\n` +
-              `• Largest Contentful Paint: ${snapshot.paintTiming.largestContentfulPaint}ms`,
+        `• First Paint: ${snapshot.paintTiming.firstPaint}ms\n` +
+        `• First Contentful Paint: ${snapshot.paintTiming.firstContentfulPaint}ms\n` +
+        `• Largest Contentful Paint: ${snapshot.paintTiming.largestContentfulPaint}ms`,
       data: snapshot.paintTiming
     };
   }
@@ -671,9 +671,9 @@ class PerformanceMetricsChatBot {
       type: 'metrics',
       metricType: 'performanceMarks',
       message: `Performance Marks:\n` +
-              `• Total Marks: ${snapshot.performanceMarks.count}\n` +
-              `• Latest Mark: ${snapshot.performanceMarks.latestMark}\n` +
-              `• Average Duration: ${snapshot.performanceMarks.averageDuration}ms`,
+        `• Total Marks: ${snapshot.performanceMarks.count}\n` +
+        `• Latest Mark: ${snapshot.performanceMarks.latestMark}\n` +
+        `• Average Duration: ${snapshot.performanceMarks.averageDuration}ms`,
       data: snapshot.performanceMarks
     };
   }
@@ -688,9 +688,9 @@ class PerformanceMetricsChatBot {
       type: 'metrics',
       metricType: 'cache',
       message: `Cache Info:\n` +
-              `• Cache Size: ${(snapshot.cache.size / 1024 / 1024).toFixed(2)} MB\n` +
-              `• Cached Items: ${snapshot.cache.itemCount}\n` +
-              `• Hit Rate: ${snapshot.cache.hitRate}%`,
+        `• Cache Size: ${(snapshot.cache.size / 1024 / 1024).toFixed(2)} MB\n` +
+        `• Cached Items: ${snapshot.cache.itemCount}\n` +
+        `• Hit Rate: ${snapshot.cache.hitRate}%`,
       data: snapshot.cache
     };
   }

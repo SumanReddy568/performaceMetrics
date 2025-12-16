@@ -5,34 +5,28 @@ class BasePanel {
             console.error(`Container with ID ${containerId} not found`);
             return;
         }
-        
+
         this.lastUpdateTime = 0; // Start with 0 to force initial timeout
         this.timeoutDuration = options.timeoutDuration || 15000; // 15 seconds default
         this.checkActivityInterval = null;
-        this.isApiPerformancePanel = containerId === 'apiPerformancePanel'; // Explicitly check for API Performance panel
         this.containerId = containerId; // Save ID for debugging
         this.hasReceivedData = false;
-        
-        if (this.isApiPerformancePanel) {
-            // Immediately set API panel as coming soon
-            this.container.classList.add('panel-coming-soon');
-        }
-        
+
         // Initialize with "no data" state
-        if (!this.isApiPerformancePanel) {
-            this.setDisabled(true);
-        }
-        
+        this.setDisabled(true);
+
+
+
         this.startActivityCheck();
-        
+
         // Force check panel state after initialization
         setTimeout(() => {
-            if (!this.hasReceivedData && !this.isApiPerformancePanel) {
+            if (!this.hasReceivedData) {
                 this.setDisabled(true);
                 console.log(`Panel ${this.containerId} forced to disabled state after initialization`);
             }
         }, 2000);
-        
+
         console.log(`Panel ${containerId} initialized with timeout: ${this.timeoutDuration}ms`);
     }
 
@@ -41,11 +35,11 @@ class BasePanel {
         if (this.checkActivityInterval) {
             clearInterval(this.checkActivityInterval);
         }
-        
+
         // Check more frequently (every 2 seconds)
         this.checkActivityInterval = setInterval(() => {
             const timeSinceLastUpdate = Date.now() - this.lastUpdateTime;
-            
+
             if (timeSinceLastUpdate > this.timeoutDuration) {
                 console.log(`Panel ${this.containerId} timed out after ${timeSinceLastUpdate}ms - disabling`);
                 this.setDisabled(true);
@@ -54,10 +48,7 @@ class BasePanel {
     }
 
     setDisabled(disabled) {
-        if (this.isApiPerformancePanel) {
-            // Don't modify API panel state
-            return;
-        }
+
 
         try {
             if (disabled) {
@@ -65,7 +56,7 @@ class BasePanel {
                 this.container.classList.remove('panel-active');
                 this.container.classList.remove('panel-coming-soon');
                 this.container.classList.add('panel-no-data');
-                
+
                 // Add a visible timer indicator
                 let timerEl = this.container.querySelector('.panel-timeout-indicator');
                 if (!timerEl) {
@@ -74,19 +65,19 @@ class BasePanel {
                     timerEl.innerHTML = '<span>No data for 15s</span>';
                     this.container.appendChild(timerEl);
                 }
-                
+
                 console.log(`Panel ${this.containerId} marked as disabled`);
             } else {
                 // Remove disabled state
-                this.container.classList.remove('panel-no-data'); 
+                this.container.classList.remove('panel-no-data');
                 this.container.classList.add('panel-active');
-                
+
                 // Remove timer indicator if it exists
                 const timerEl = this.container.querySelector('.panel-timeout-indicator');
                 if (timerEl) {
                     timerEl.remove();
                 }
-                
+
                 console.log(`Panel ${this.containerId} marked as enabled`);
             }
         } catch (e) {
@@ -98,14 +89,12 @@ class BasePanel {
         const previousTime = this.lastUpdateTime;
         this.lastUpdateTime = Date.now();
         this.hasReceivedData = true;
-        
+
         const timeDiff = this.lastUpdateTime - previousTime;
         console.log(`Panel ${this.containerId} activity updated after ${timeDiff}ms`);
-        
-        // Only update visual state if not API Performance panel
-        if (!this.isApiPerformancePanel) {
-            this.setDisabled(false);
-        }
+
+        // Only update visual state
+        this.setDisabled(false);
     }
 
     destroy() {

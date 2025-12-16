@@ -11,7 +11,7 @@ class PerformanceCollector {
             firstPaint: [],
             pageLoad: [],
             longTasks: [],
-            apiPerformance: [],
+
             pageErrors: [],
             cacheUsage: [],
             webVitals: [],
@@ -40,7 +40,6 @@ class PerformanceCollector {
         this.collectFirstPaint();
         this.collectPageLoad();
         this.collectLongTasks();
-        this.collectApiPerformance();
         this.collectPageErrors();
         this.collectCacheUsage();
         this.collectWebVitals();
@@ -119,7 +118,7 @@ class PerformanceCollector {
                 duration: 0,
                 timestamp: Date.now()
             },
-            apiPerformance: this.performanceData.apiPerformance || [],
+
             pageErrors: this.performanceData.pageErrors || [],
             cacheUsage: this.performanceData.cacheUsage || {},
             webVitals: this.performanceData.webVitals.slice(-1)[0] || { lcp: 0, fid: 0, cls: 0 },
@@ -486,97 +485,7 @@ class PerformanceCollector {
         }
     }
 
-    collectApiPerformance() {
-        let apiCalls = [];
 
-        const originalXHR = window.XMLHttpRequest.prototype.send;
-        window.XMLHttpRequest.prototype.send = function (...args) {
-            const startTime = performance.now();
-            const method = this._method || 'GET';
-            const url = this._url || 'Unknown URL';
-            const xhr = this;
-
-            this.addEventListener('loadend', function () {
-                const duration = performance.now() - startTime;
-                const size = parseInt(xhr.getResponseHeader('content-length')) || xhr.responseText?.length || 0;
-                apiCalls.push({
-                    type: 'XHR',
-                    method,
-                    url,
-                    duration,
-                    size,
-                    status: xhr.status,
-                    timestamp: Date.now()
-                });
-            });
-
-            return originalXHR.apply(this, args);
-        };
-
-        const originalFetch = window.fetch;
-        window.fetch = async function (resource, options = {}) {
-            const startTime = performance.now();
-            const method = options.method || 'GET';
-            const url = typeof resource === 'string' ? resource : resource.url;
-
-            try {
-                const response = await originalFetch.apply(this, arguments);
-                const duration = performance.now() - startTime;
-                const clone = response.clone();
-                const buffer = await clone.arrayBuffer();
-                const size = buffer.byteLength;
-
-                apiCalls.push({
-                    type: 'Fetch',
-                    method,
-                    url,
-                    duration,
-                    size,
-                    status: response.status,
-                    timestamp: Date.now()
-                });
-                return response;
-            } catch (e) {
-                console.warn('Error measuring fetch response:', e);
-                throw e;
-            }
-        };
-
-        setInterval(() => {
-            if (apiCalls.length > 0) {
-                this.performanceData.apiPerformance = apiCalls.slice(-50);
-                apiCalls.length = 0;
-            }
-        }, 1000);
-
-        // Make a test API call after a short delay
-        setTimeout(() => {
-            // console.log('Making test API call from content script');
-            fetch('https://jsonplaceholder.typicode.com/posts/1')
-                .then(response => response.json())
-                .then(data => {
-                    // console.log('Content script API test success:', data);
-                    // Manually send this API call to ensure it's captured
-                    try {
-                        chrome.runtime.sendMessage({
-                            type: 'api-performance-update',
-                            data: [{
-                                type: 'Fetch',
-                                method: 'GET',
-                                url: 'https://jsonplaceholder.typicode.com/posts/1',
-                                duration: 150,
-                                size: 2048,
-                                status: 200,
-                                timestamp: Date.now()
-                            }]
-                        });
-                    } catch (e) {
-                        console.error('Error sending manual API call:', e);
-                    }
-                })
-                .catch(err => console.error('Content script API test failed:', err));
-        }, 3000);
-    }
 
     collectPageErrors() {
         window.addEventListener('error', (event) => {
@@ -601,42 +510,76 @@ class PerformanceCollector {
     }
 
     collectCacheUsage() {
-        if ('caches' in window) {
-            setInterval(async () => {
-                try {
-                    const cacheNames = await caches.keys();
-                    let totalSize = 0;
-                    let hits = 0;
-                    let misses = 0;
+        if (!('caches' in window)) return;
 
-                    for (const name of cacheNames) {
-                        const cache = await caches.open(name);
-                        const requests = await cache.keys();
+        // Track runtime hits/misses
+        let runtimeHits = 0;
+        let runtimeMisses = 0;
 
-                        for (const request of requests) {
-                            const response = await cache.match(request);
-                            if (response) {
-                                hits++;
-                                const clone = response.clone();
-                                const buffer = await clone.arrayBuffer();
-                                totalSize += buffer.byteLength;
-                            } else {
-                                misses++;
-                            }
+        // Helper to instrument match methods
+        const instrumentMatch = (proto, methodName) => {
+            if (proto && proto[methodName]) {
+                const original = proto[methodName];
+                proto[methodName] = function (...args) {
+                    return original.apply(this, args).then(response => {
+                        if (response) {
+                            runtimeHits++;
+                        } else {
+                            runtimeMisses++;
                         }
-                    }
+                        return response;
+                    });
+                };
+            }
+        };
 
-                    this.performanceData.cacheUsage = {
-                        size: totalSize,
-                        hits,
-                        misses,
-                        timestamp: Date.now()
-                    };
-                } catch (e) {
-                    console.error('Error collecting cache usage:', e);
-                }
-            }, 1000);
+        // Instrument CacheStorage.match (caches.match)
+        if (window.CacheStorage) {
+            instrumentMatch(window.CacheStorage.prototype, 'match');
         }
+
+        // Instrument Cache.match
+        if (window.Cache) {
+            instrumentMatch(window.Cache.prototype, 'match');
+        }
+
+        setInterval(async () => {
+            try {
+                let totalSize = 0;
+                let totalEntries = 0;
+
+                // efficient size estimation
+                if (navigator.storage && navigator.storage.estimate) {
+                    const estimate = await navigator.storage.estimate();
+                    // usageDetails is available in Chrome
+                    if (estimate.usageDetails && estimate.usageDetails.caches) {
+                        totalSize = estimate.usageDetails.caches;
+                    } else {
+                        // Fallback to usage if details not available (might include IDB etc)
+                        totalSize = estimate.usage;
+                    }
+                }
+
+                // Count entries (less expensive than reading bodies)
+                // We do this less frequently? No, let's just do keys().length which is fast enough
+                const cacheNames = await caches.keys();
+                for (const name of cacheNames) {
+                    const cache = await caches.open(name);
+                    const requests = await cache.keys();
+                    totalEntries += requests.length;
+                }
+
+                this.performanceData.cacheUsage = {
+                    size: totalSize,
+                    hits: runtimeHits,
+                    misses: runtimeMisses,
+                    totalEntries,
+                    timestamp: Date.now()
+                };
+            } catch (e) {
+                console.error('Error collecting cache usage:', e);
+            }
+        }, 2000); // Check every 2 seconds instead of 1
     }
 
     collectWebVitals() {

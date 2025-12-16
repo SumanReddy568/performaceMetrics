@@ -18,8 +18,6 @@ class MetricsExporter {
       'DOM Load Time (ms)',
       'Window Load Time (ms)',
       'Long Tasks Duration (ms)',
-      'API Calls Count',
-      'API Response Time (ms)',
       'Page Errors Count',
       'Recent Error Types',
       'Cache Size (MB)',
@@ -68,8 +66,7 @@ class MetricsExporter {
       data.pageLoad?.domLoadTime?.toFixed(2) || 0,
       data.pageLoad?.windowLoadTime?.toFixed(2) || 0,
       data.longTasks?.duration?.toFixed(2) || 0,
-      data.apiPerformance?.length || 0,
-      data.apiPerformance?.reduce((avg, call) => avg + call.duration, 0) / (data.apiPerformance?.length || 1),
+
       data.pageErrors?.count || 0,
       data.pageErrors?.recentErrors?.map(e => e.type).join(';') || '',
       ((data.cacheUsage?.size || 0) / (1024 * 1024)).toFixed(2),

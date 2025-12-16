@@ -99,16 +99,18 @@
     /* Reduced from 80px */
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    padding: 4px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
 .header-container {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: 16px;
-    /* Increased gap for spacing */
-    padding: 4px 8px;
+    flex-shrink: 0;
+    padding: 0;
 }
 
 .header-left {
@@ -151,10 +153,24 @@
 }
 
 .url-container {
-    margin: 8px 0;
-    padding: 4px 8px;
+    display: flex;
+    align-items: center;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 4px;
+    padding: 4px 12px;
+    height: 36px;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+}
+
+.url-value {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 8px;
+    color: #aeaeae;
+    font-size: 13px;
 }
 
 .metrics-container {
@@ -201,13 +217,13 @@
 
 .system-metrics {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
     gap: 12px;
-    /* Increased gap */
     padding: 6px 12px;
-    margin: 4px;
+    margin: 0;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 4px;
+    flex-shrink: 0;
 }
 
 .metric-item {
@@ -296,12 +312,7 @@
     /* Increased from 20px */
 }
 
-.url-container {
-    padding: 1px 2px;
-    /* Further reduced padding */
-    margin: 1px 2px;
-    /* Further reduced margin */
-}
+/* .url-container overrides removed */
 
 .server-timing-list {
     max-height: 120px;
@@ -432,6 +443,7 @@
 @media (max-width: 768px) {
     .header {
         height: auto;
+        flex-wrap: wrap;
     }
 
     .header-container {
@@ -608,143 +620,145 @@
 
 /* Feedback Popup Modal */
 .feedback-modal-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
-  z-index: 10000;
-  justify-content: center;
-  align-items: center;
-  animation: fadeIn 0.3s ease;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
 }
 
 .feedback-modal-overlay.active {
-  display: flex;
+    display: flex;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .feedback-modal-content {
-  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
-  border-radius: 12px;
-  padding: 30px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  animation: slideIn 0.3s ease;
+    background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: slideIn 0.3s ease;
 }
 
 @keyframes slideIn {
-  from {
-    transform: translateY(-50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .feedback-modal-close {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: transparent;
-  border: none;
-  color: #aaa;
-  font-size: 28px;
-  cursor: pointer;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: #aaa;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
 }
 
 .feedback-modal-close:hover {
-  color: #fff;
+    color: #fff;
 }
 
 .feedback-modal-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: #fff;
-  margin: 0 0 15px 0;
-  text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 15px 0;
+    text-align: center;
 }
 
 .feedback-modal-description {
-  color: #ccc;
-  margin: 0 0 25px 0;
-  text-align: center;
-  line-height: 1.5;
+    color: #ccc;
+    margin: 0 0 25px 0;
+    text-align: center;
+    line-height: 1.5;
 }
 
 .feedback-banners {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
 .feedback-promo-banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 15px 20px;
-  background: linear-gradient(to right, #444444, #333333);
-  border-radius: 8px;
-  text-decoration: none;
-  color: #fff;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  justify-content: center;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 20px;
+    background: linear-gradient(to right, #444444, #333333);
+    border-radius: 8px;
+    text-decoration: none;
+    color: #fff;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: center;
 }
 
 .feedback-promo-banner:hover {
-  background: linear-gradient(to right, #555555, #444444);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(to right, #555555, #444444);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
 
 .feedback-promo-banner svg {
-  flex-shrink: 0;
+    flex-shrink: 0;
 }
 
 .feedback-promo-banner .banner-text {
-  flex: 1;
-  text-align: center;
+    flex: 1;
+    text-align: center;
 }
 
 .feedback-later-btn {
-  width: 100%;
-  padding: 12px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  color: #aaa;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #aaa;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .feedback-later-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
 }

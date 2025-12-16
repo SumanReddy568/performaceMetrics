@@ -252,11 +252,7 @@ class PerformanceMetricsDevTools {
       }
     );
 
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message.type === 'api-performance-update') {
-        apiPerformancePanel.update(message.data);
-      }
-    });
+
 
     // Update URL when page changes
     chrome.devtools.network.onNavigated.addListener((url) => {
@@ -332,26 +328,9 @@ class PerformanceMetricsDevTools {
         console.log('Devtools received message:', message);
         if (message.type === 'metrics-update') {
           // Special handling for API performance data
-          if (!message.data.apiPerformance || message.data.apiPerformance.length === 0) {
-            console.log('No API performance data received, adding test data');
-            message.data.apiPerformance = [{
-              type: 'Test',
-              method: 'GET',
-              url: 'https://example.com/api/test',
-              duration: 120 + Math.random() * 50, // Randomize for visual feedback
-              size: 1536,
-              status: 200,
-              timestamp: Date.now()
-            }];
-          }
-
-          console.log('API data received:', message.data.apiPerformance);
           this.updatePanels(message.data);
         } else if (message.type === 'api-performance-update') {
-          console.log('Direct API performance update received:', message.data);
-          if (this.panels.apiPerformance && Array.isArray(message.data)) {
-            this.panels.apiPerformance.update(message.data);
-          }
+          // Legacy support or removed feature
         }
       });
 
@@ -393,21 +372,7 @@ class PerformanceMetricsDevTools {
       this.panels.pageErrors = new PageErrorsPanel('pageErrorsPanel');
       this.panels.cacheUsage = new CacheUsagePanel('cacheUsagePanel');
 
-      // Special handling for API Performance panel
-      const apiPanel = document.getElementById('apiPerformancePanel');
-      if (apiPanel) {
-        apiPanel.classList.add('panel-disabled', 'panel-coming-soon');
-        apiPanel.setAttribute('title', 'Coming in v1.0.3');
-      }
 
-      // Initialize API Performance panel
-      if (document.getElementById('apiPerformancePanel')) {
-        console.log('Loading API Performance panel...');
-        this.panels.apiPerformance = new APIPerformancePanel('apiPerformancePanel');
-        console.log('API Performance panel loaded successfully');
-      } else {
-        console.error('Cannot find apiPerformancePanel element!');
-      }
 
       // Initialize new panels
       this.panels.webVitals = new WebVitalsPanel('webVitalsPanel');
@@ -498,20 +463,7 @@ class PerformanceMetricsDevTools {
         });
       }
 
-      if (data.apiPerformance && data.apiPerformance.length > 0) {
-        // Make a copy to avoid modifying the original data
-        let apiData = [...data.apiPerformance];
 
-        console.log('Updating API panel with data of length:', apiData.length);
-        if (this.panels.apiPerformance) {
-          safeUpdatePanel(this.panels.apiPerformance, apiData);
-        } else {
-          console.warn('API Performance panel not initialized yet');
-          // Initialize it if needed
-          this.panels.apiPerformance = new APIPerformancePanel('apiPerformancePanel');
-          safeUpdatePanel(this.panels.apiPerformance, apiData);
-        }
-      }
 
       // Update new panels - Ensure keys match the snapshot from contentScript.js
       if (data.webVitals) safeUpdatePanel(this.panels.webVitals, data.webVitals);
@@ -567,27 +519,20 @@ class PerformanceMetricsDevTools {
       ['eventLoopLag', 'eventLoopLagPanel'],
       ['paintTiming', 'paintTimingPanel'],
       ['navigationTiming', 'navigationTimingPanel'],
-      ['e2e', 'e2ePanel'],
-      // API Performance panel will always be last
-      ['apiPerformance', 'apiPerformancePanel']
     ];
 
     const panelContainer = document.querySelector('.panel-container');
     if (!panelContainer) return;
- 
+
     const panelsWithData = [];
     const panelsWithoutData = [];
-    let apiPanelElem = null;
 
     panelKeyToId.forEach(([panelKey, panelId]) => {
       const panelData = data[panelKey];
       const panelElem = document.getElementById(panelId);
       if (!panelElem) return;
 
-      if (panelKey === 'apiPerformance') {
-        apiPanelElem = panelElem;
-        return; // Always move API Performance panel to last
-      }
+
 
       // Heuristic: consider panel has data if it's not null/undefined/empty
       let hasData = false;
@@ -616,9 +561,7 @@ class PerformanceMetricsDevTools {
         panelContainer.appendChild(panelElem);
       }
     });
-    if (apiPanelElem && apiPanelElem.parentNode === panelContainer) {
-      panelContainer.appendChild(apiPanelElem);
-    }
+
   }
 
   async initSystemMetrics() {
@@ -693,12 +636,7 @@ class PerformanceMetricsDevTools {
   // Add a listener for direct chrome.runtime messages for API data
   setupMessageListeners() {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message.type === 'api-performance-update') {
-        console.log('Direct API performance message received:', message.data);
-        if (this.panels.apiPerformance) {
-          this.panels.apiPerformance.update(message.data);
-        }
-      }
+
       if (message.type === 'userInteraction') {
         this.panels.userInteraction.update(message.data);
       }
