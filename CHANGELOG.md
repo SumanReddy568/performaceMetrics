@@ -1,3 +1,6 @@
+## [1.1.4] - 2025-12-16
+- feat: Implement a complete authentication system for the devtools panel, including signup, login, and logout functionalities.
+
 ## [1.1.3] - 2025-11-09
 - Adding icon metrics
 
