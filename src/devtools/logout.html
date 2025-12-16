@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout - Performance Metrics</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="auth-container">
+        <div class="app-branding">
+            <h1 class="app-title">Performance Metrics</h1>
+        </div>
+        <h2>Confirm Logout</h2>
+
+        <div id="error-message" class="message error-message"></div>
+        <div id="success-message" class="message success-message"></div>
+
+        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 24px;">
+            Are you sure you want to log out of your account?
+        </p>
+
+        <button type="button" id="logout-btn" class="btn" style="background-color: var(--error-color);">
+            <span class="button-text">Log Out</span>
+            <span class="button-loader"></span>
+        </button>
+
+        <button type="button" id="cancel-btn" class="btn btn-secondary">
+            Cancel
+        </button>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="logout.js"></script>
+</body>
+
+</html>

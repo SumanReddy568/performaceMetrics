@@ -143,14 +143,7 @@
     color: #fff;
 }
 
-#refreshButton,
-.export-button,
-.danger-button {
-    padding: 4px 12px;
-    font-size: 12px;
-    border-radius: 4px;
-    min-width: 60px;
-}
+
 
 .url-container {
     display: flex;
@@ -246,64 +239,15 @@
     font-weight: 500;
 }
 
-.header-container button {
-    background-color: #444444;
-    /* Changed from green (#4CAF50) to gray */
-    border: none;
-    color: white;
-    padding: 5px 10px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 4px;
-}
 
-#refreshButton {
-    transition: all 0.2s ease-in-out;
-}
 
-#refreshButton:hover {
-    transform: scale(1.05);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
 
-#refreshButton,
-.export-button,
-.danger-button {
-    padding: 4px 8px;
-    font-size: 11px;
-    min-width: 60px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background: linear-gradient(to right, #444444, #333333);
-    /* Standard gray gradient */
-    color: white;
-}
 
-#refreshButton:hover,
-.export-button:hover,
-.danger-button:hover {
-    background: linear-gradient(to right, #555555, #444444);
-    /* Slightly lighter gray on hover */
-    transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
-}
 
-#refreshButton:active,
-.export-button:active,
-.danger-button:active {
-    transform: scale(0.95);
-    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
-}
+
+
+
+
 
 .github-icon {
     width: 24px;
@@ -465,21 +409,7 @@
     }
 }
 
-@media (max-width: 576px) {
-    .header-container h1 {
-        font-size: 9px;
-        /* Further reduced font size */
-    }
 
-    #refreshButton,
-    .export-button,
-    .danger-button {
-        font-size: 7px;
-        /* Further reduced font size */
-        padding: 2px 3px;
-        /* Further reduced button padding */
-    }
-}
 
 .panel-container {
     padding-top: 16px;

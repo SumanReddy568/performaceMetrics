@@ -44,6 +44,15 @@
                 </svg>
                 <span>Clear</span>
               </button>
+              <div class="menu-divider"></div>
+              <button id="logoutButton">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"></path>
+                  <path d="M16 17l5-5-5-5"></path>
+                  <path d="M21 12H9"></path>
+                </svg>
+                <span>Logout</span>
+              </button>
             </div>
           </div>
           <h1>Performance Metrics</h1>
@@ -56,32 +65,20 @@
           </svg>
         </a>
       </div>
-      <div class="url-container">
+      <!-- <div class="url-container">
         <span class="url-label">Monitoring:</span>
         <span class="url-value" id="currentUrl" title="">Loading...</span>
-      </div>
+      </div> -->
       <div class="system-metrics">
         <div class="metric-item">
           <span class="metric-label">Chrome:</span>
           <span class="metric-value" id="chrome-version">--</span>
         </div>
-        <!-- <div class="metric-item">
-          <span class="metric-label">Windows:</span>
-          <span class="metric-value" id="chrome-windows">--</span>
-        </div> -->
-        <!-- <div class="metric-item">
-          <span class="metric-label">Tabs:</span>
-          <span class="metric-value" id="chrome-tabs">--</span>
-        </div> -->
         <div class="metric-item">
           <div class="metric-indicator" id="network-indicator"></div>
           <span class="metric-label">Network:</span>
           <span class="metric-value" id="network-status">--</span>
         </div>
-        <!-- <div class="metric-item">
-          <span class="metric-label">Req/s:</span>
-          <span class="metric-value" id="requests-per-sec">--</span>
-        </div> -->
         <div class="metric-item">
           <span class="metric-label">Memory:</span>
           <span class="metric-value" id="system-memory">--</span>
@@ -182,6 +179,7 @@
   <script src="/src/panels/eventLoopLagPanel/eventLoopLagPanel.js"></script>
   <script src="/src/panels/paintTimingPanel/paintTimingPanel.js"></script>
   <script src="/src/panels/navigationTimingPanel/navigationTimingPanel.js"></script>
+  <script src="/src/devtools/auth.js"></script>
   <script src="devtools.js"></script>
   <script src="/src/utils/feedbackPopup.js"></script>
 </body>

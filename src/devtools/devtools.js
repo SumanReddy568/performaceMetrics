@@ -20,6 +20,13 @@ class PerformanceMetricsDevTools {
     this.initRequestsCounter();
     this.setupClearStorageButton();
     this.setupExportButton();
+    this.setupLogoutButton(); // Add logout button listener
+
+    // Check authentication immediately
+    if (window.AuthModule && !window.AuthModule.requireAuth()) {
+      return;
+    }
+
     this.initChatBot(); // Re-enabled
 
     // Listen for dock position changes
@@ -491,6 +498,15 @@ class PerformanceMetricsDevTools {
 
     } catch (e) {
       console.error("Error updating panels:", e);
+    }
+  }
+
+  setupLogoutButton() {
+    const logoutBtn = document.getElementById('logoutButton');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        window.location.href = 'logout.html';
+      });
     }
   }
 
