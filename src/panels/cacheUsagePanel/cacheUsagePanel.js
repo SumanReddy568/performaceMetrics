@@ -12,6 +12,7 @@ class CacheUsagePanel extends BasePanel {
         <h3>Cache Usage</h3>
         <div class="cache-stats">
           <span id="cacheSize">Size: 0 MB</span>
+          <span id="cacheEntries">Items: 0</span>
           <span id="cacheHits">Hits: 0</span>
           <span id="cacheMisses">Misses: 0</span>
         </div>
@@ -79,20 +80,25 @@ class CacheUsagePanel extends BasePanel {
     }
 
     // Update stats
-    document.getElementById('cacheSize').textContent = 
+    document.getElementById('cacheSize').textContent =
       `Size: ${(data.size / (1024 * 1024)).toFixed(1)} MB`;
-    document.getElementById('cacheHits').textContent = 
+    document.getElementById('cacheHits').textContent =
       `Hits: ${data.hits}`;
-    document.getElementById('cacheMisses').textContent = 
+    document.getElementById('cacheMisses').textContent =
       `Misses: ${data.misses}`;
+
+    const entriesEl = document.getElementById('cacheEntries');
+    if (entriesEl) {
+      entriesEl.textContent = `Items: ${data.entries || 0}`;
+    }
 
     // Update chart
     this.chart.data.labels = this.data.map((_, i) => `${i}s`);
     this.chart.data.datasets[0].data = this.data.map(d => (d.size / (1024 * 1024)).toFixed(1));
-    this.chart.data.datasets[1].data = this.data.map(d => 
+    this.chart.data.datasets[1].data = this.data.map(d =>
       ((d.hits / (d.hits + d.misses)) * 100).toFixed(1)
     );
-    
+
     this.chart.update('none');
   }
 

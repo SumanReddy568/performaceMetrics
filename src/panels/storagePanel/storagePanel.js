@@ -58,12 +58,20 @@ class StoragePanel extends BasePanel {
         if (!data) return;
         this.updateLastActivity();
 
-        const totalKB = (data.total / 1024).toFixed(2);
-        // Calculate quota percentage, handle potential division by zero
-        const quotaPercent = data.quota > 0 ? ((data.total / data.quota) * 100).toFixed(1) : 0;
+        // Calculate real total (Managed + Local + Session)
+        const realTotal = (data.localStorage || 0) +
+            (data.sessionStorage || 0) +
+            (data.indexedDB || 0) +
+            (data.cacheStorage || 0);
+
+        const totalKB = (realTotal / 1024).toFixed(2);
+
+        // Quota only applies to managed storage (IDB + Cache)
+        const managedTotal = (data.indexedDB || 0) + (data.cacheStorage || 0);
+        const quotaPercent = data.quota > 0 ? ((managedTotal / data.quota) * 100).toFixed(1) : 0;
 
         document.getElementById('totalStorage').textContent = `Total: ${totalKB} KB`;
-        document.getElementById('quotaUsage').textContent = `Quota: ${quotaPercent}%`;
+        document.getElementById('quotaUsage').textContent = `Quota (Managed): ${quotaPercent}%`;
 
         // Update chart data (sizes in KB)
         this.chart.data.datasets[0].data = [
@@ -78,13 +86,26 @@ class StoragePanel extends BasePanel {
         const tbody = document.getElementById('storageList');
         tbody.innerHTML = Object.entries(data.details || {}).map(([type, info]) => {
             const sizeKB = (info.size / 1024).toFixed(2);
-            const usagePercent = data.quota > 0 ? ((info.size / data.quota) * 100).toFixed(1) : 0;
+            let usageDisplay = '0%';
+
+            // Local/Session storage usually have a fixed 5MB-10MB limit per origin, unrelated to global quota
+            if (type.toLowerCase().includes('storage') && !type.toLowerCase().includes('cache')) {
+                // Assuming ~5MB limit for typical browsers
+                const limit = 5 * 1024 * 1024;
+                const percent = ((info.size / limit) * 100).toFixed(1);
+                usageDisplay = `${percent}% (of ~5MB)`;
+            } else {
+                // IDB and Cache count towards global quota
+                const percent = data.quota > 0 ? ((info.size / data.quota) * 100).toFixed(1) : 0;
+                usageDisplay = `${percent}%`;
+            }
+
             return `
                 <tr>
                     <td>${type}</td>
                     <td>${info.items || 0}</td>
                     <td>${sizeKB} KB</td>
-                    <td>${usagePercent}%</td>
+                    <td>${usageDisplay}</td>
                 </tr>
             `;
         }).join('');
