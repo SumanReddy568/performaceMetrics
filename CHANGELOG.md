@@ -1,3 +1,6 @@
+## [1.1.5] - 2025-12-17
+- feat: add initial devtools panel UI and styling for performance metrics, including modals and dropdowns.
+
 ## [1.1.4] - 2025-12-16
 - feat: Implement a complete authentication system for the devtools panel, including signup, login, and logout functionalities.
 

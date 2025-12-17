@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Performance Metrics",
   "description": "Displays system performance metrics (CPU & Memory) directly on the toolbar icon and integrates with DevTools for deeper insights.",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "devtools_page": "src/devtools/devtools.html",
   "icons": {
     "16": "icons/icon16.png",
