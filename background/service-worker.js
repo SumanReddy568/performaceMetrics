@@ -1,3 +1,5 @@
+import { trackPageScan } from '../utils/analytics.js';
+
 let connections = new Map();
 let refreshedTabs = new Set();
 let monitoringInterval = null;
@@ -24,6 +26,16 @@ chrome.runtime.onConnect.addListener((port) => {
     if (message.type === "init") {
       const tabId = message.tabId;
       connections.set(tabId, port);
+
+      // Track page scan event with page URL
+      chrome.tabs.get(tabId, (tab) => {
+        if (tab && tab.url) {
+          trackPageScan(tab.url, {
+            tabId: tabId,
+            tabTitle: tab.title || 'Unknown'
+          });
+        }
+      });
 
       if (message.shouldRefresh && !refreshedTabs.has(tabId)) {
         refreshedTabs.add(tabId);
