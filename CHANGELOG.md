@@ -1,3 +1,6 @@
+## [1.1.6] - 2025-12-18
+- feat: Enhance service worker to track page scan events and update manifest for module support
+
 ## [1.1.5] - 2025-12-17
 - feat: add initial devtools panel UI and styling for performance metrics, including modals and dropdowns.
 
