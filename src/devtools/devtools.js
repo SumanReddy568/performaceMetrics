@@ -21,14 +21,14 @@ class PerformanceMetricsDevTools {
     this.initRequestsCounter();
     this.setupClearStorageButton();
     this.setupExportButton();
-    this.setupLogoutButton(); // Add logout button listener
+    this.setupLogoutButton();
 
     // Check authentication immediately
     if (window.AuthModule && !window.AuthModule.requireAuth()) {
       return;
     }
 
-    this.initChatBot(); // Re-enabled
+    this.initChatBot();
 
     // Listen for dock position changes
     this.listenForDockChanges();
@@ -493,15 +493,6 @@ class PerformanceMetricsDevTools {
 
       // Auto-arrange panels after updating
       this.autoArrangePanels(data);
-
-      // Force check all panels after short delay to ensure timeout works
-      setTimeout(() => {
-        Object.values(this.panels).forEach(panel => {
-          if (panel && typeof panel.startActivityCheck === 'function') {
-            panel.startActivityCheck();
-          }
-        });
-      }, 1000);
 
     } catch (e) {
       console.error("Error updating panels:", e);

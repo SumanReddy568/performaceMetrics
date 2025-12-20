@@ -152,8 +152,13 @@ class PerformanceCollector {
                 data: snapshot
             });
         } catch (e) {
-            console.error('Error sending message to extension:', e);
-            this.isActive = false; // Deactivate the collector if the context is invalidated
+            // Only deactivate if the context is actually invalidated
+            if (e.message && (e.message.includes('context invalidated') || e.message.includes('Extension context invalidated'))) {
+                console.error('Performance Metrics: Extension context invalidated. Please refresh the page.');
+                this.isActive = false;
+            } else {
+                console.warn('Error sending message to extension (will retry):', e);
+            }
         }
     }
 
@@ -286,6 +291,7 @@ class PerformanceCollector {
 
     collectDOM() {
         setInterval(() => {
+            if (!this.isActive) return;
             try {
                 const elements = document.querySelectorAll('*').length;
                 const nodes = document.getElementsByTagName('*').length;
@@ -300,7 +306,7 @@ class PerformanceCollector {
             } catch (e) {
                 console.error("Error collecting DOM metrics:", e);
             }
-        }, 1000);
+        }, 5000); // Check every 5 seconds (expensive operation)
     }
 
     countEventListeners() {

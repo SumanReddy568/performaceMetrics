@@ -63,31 +63,38 @@ chrome.runtime.onConnect.addListener((port) => {
 });
 
 // -----------------------------
-// MESSAGE RELAY
+// MESSAGE RELAY (Forward messages from tabs to devtools)
 // -----------------------------
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // If message comes from a content script (sender.tab exists)
   if (sender.tab) {
-    const port = connections.get(sender.tab.id);
-    if (port) {
-      port.postMessage(message);
-      sendResponse({ status: "forwarded" });
-    } else {
-      sendResponse({ status: "no_connection" });
+    const tabId = sender.tab.id;
+    const port = connections.get(tabId);
+
+    if (message.type === "metrics-update") {
+      // Forward to devtools port if connected
+      if (port) {
+        port.postMessage(message);
+      }
+
+      // Also broadcast to other extension parts (e.g. popup)
+      chrome.runtime.sendMessage({
+        type: "metrics-update",
+        data: { ...message.data },
+        tabId: tabId
+      }).catch(() => {
+        // Ignore error if no other listeners exist
+      });
+
+      sendResponse({ status: port ? "forwarded" : "broadcast_only" });
+    } else if (message.type === "api-performance-update") {
+      if (port) {
+        port.postMessage(message);
+      }
+      sendResponse({ status: port ? "forwarded" : "no_port" });
     }
   }
   return true;
-});
-
-// -----------------------------
-// METRICS UPDATE RELAY
-// -----------------------------
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === "metrics-update") {
-    chrome.runtime.sendMessage({
-      type: "metrics-update",
-      data: { ...msg.data },
-    });
-  }
 });
 
 // -----------------------------
@@ -113,12 +120,12 @@ async function getSystemInfo() {
       console.warn("System APIs not available");
       return null;
     }
-    
+
     const [cpuInfo, memoryInfo] = await Promise.all([
       chrome.system.cpu.getInfo(),
       chrome.system.memory.getInfo(),
     ]);
-    
+
     return { cpuInfo, memoryInfo };
   } catch (error) {
     console.error("System info error:", error);
@@ -138,12 +145,12 @@ async function ensureIconVisible() {
       48: "icons/icon48.png",
       128: "icons/icon128.png"
     };
-    
+
     // Set icon using path (most reliable method)
     await chrome.action.setIcon({
       path: defaultIcon
     });
-    
+
     // Check for runtime errors (Chrome API sometimes throws but still works)
     if (chrome.runtime.lastError) {
       // Only log if it's a real error, not just a warning
@@ -152,12 +159,12 @@ async function ensureIconVisible() {
         console.warn("Icon setting warning:", errorMsg);
       }
     }
-    
+
     // Also set title to ensure extension is recognized
     await chrome.action.setTitle({
       title: "Performance Metrics - CPU & Memory Monitor"
     });
-    
+
   } catch (err) {
     // Only log if it's a real error that prevents functionality
     const errorMsg = err.message || String(err);
@@ -175,9 +182,9 @@ async function updatePinnedIcon() {
   try {
     // ALWAYS ensure default icon is set first
     await ensureIconVisible();
-    
+
     const systemInfo = await getSystemInfo();
-    
+
     if (!systemInfo) {
       // Show error badge if system APIs not available
       await chrome.action.setBadgeText({ text: "ERR" });
@@ -206,18 +213,18 @@ async function updatePinnedIcon() {
     // Use badge to show metrics (simpler and more reliable)
     const value = showCPU ? avgCPU : memUsage;
     const metricType = showCPU ? "CPU" : "Memory";
-    
+
     // Format badge text: just percentage "6%" or "58%"
     const badgeText = `${value}%`;
-    
+
     // Set badge text
     await chrome.action.setBadgeText({ text: badgeText });
-    
+
     // Set tooltip/title to show what metric it is on hover
     await chrome.action.setTitle({
       title: `${metricType}: ${value}%`
     });
-    
+
     // Set badge color based on usage
     let badgeColor;
     if (value > 90) {
@@ -227,12 +234,12 @@ async function updatePinnedIcon() {
     } else {
       badgeColor = showCPU ? "#00BFFF" : "#FFD700"; // Blue for CPU, Yellow for Memory
     }
-    
+
     await chrome.action.setBadgeBackgroundColor({ color: badgeColor });
 
     // Toggle between CPU and Memory for next update
     showCPU = !showCPU;
-    
+
   } catch (err) {
     console.error("Icon update error:", err);
     // Final fallback - ensure default icon is visible
@@ -253,10 +260,10 @@ function startMonitoring() {
   if (isMonitoring) return;
   isMonitoring = true;
   console.log("Starting performance monitoring");
-  
+
   // Ensure default icon is visible first
   ensureIconVisible();
-  
+
   // Then try to update with dynamic icon
   updatePinnedIcon(); // initial draw
   monitoringInterval = setInterval(updatePinnedIcon, 3000); // every 3s

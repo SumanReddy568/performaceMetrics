@@ -6,45 +6,39 @@ class BasePanel {
             return;
         }
 
-        this.lastUpdateTime = Date.now(); // Initialize with current time to avoid huge timeout values
-        this.timeoutDuration = options.timeoutDuration || 15000; // 15 seconds default
+        this.lastUpdateTime = Date.now();
+        this.timeoutDuration = options.timeoutDuration || 60000; // Increase to 60 seconds default
         this.checkActivityInterval = null;
-        this.containerId = containerId; // Save ID for debugging
+        this.containerId = containerId;
         this.hasReceivedData = false;
 
-        // Initialize with "no data" state
-        this.setDisabled(true);
-
-
-
+        // Start checking for activity
         this.startActivityCheck();
 
-        // Force check panel state after initialization
-        setTimeout(() => {
-            if (!this.hasReceivedData) {
-                this.setDisabled(true);
-                console.log(`Panel ${this.containerId} forced to disabled state after initialization`);
-            }
-        }, 2000);
-
-        console.log(`Panel ${containerId} initialized with timeout: ${this.timeoutDuration}ms`);
+        console.log(`Panel ${containerId} initialized. Timeout: ${this.timeoutDuration}ms`);
     }
 
     startActivityCheck() {
-        // Clear any existing interval first
         if (this.checkActivityInterval) {
             clearInterval(this.checkActivityInterval);
         }
 
-        // Check more frequently (every 2 seconds)
         this.checkActivityInterval = setInterval(() => {
             const timeSinceLastUpdate = Date.now() - this.lastUpdateTime;
 
-            if (timeSinceLastUpdate > this.timeoutDuration) {
-                console.log(`Panel ${this.containerId} timed out after ${timeSinceLastUpdate}ms - disabling`);
+            // Only disable if we've NEVER received data and timed out, 
+            // OR if it's been an extremely long time (3x timeout)
+            if (!this.hasReceivedData && timeSinceLastUpdate > 15000) {
+                console.log(`Panel ${this.containerId} has not received any data yet (15s) - marking as no-data`);
                 this.setDisabled(true);
+            } else if (this.hasReceivedData && timeSinceLastUpdate > this.timeoutDuration) {
+                // If we HAD data but it stopped, we don't necessarily want to hide it, 
+                // but we might want to warn. For now, let's just keep it active.
+                console.warn(`Panel ${this.containerId} data is stale (${timeSinceLastUpdate}ms)`);
+                // We keep it enabled so the user can still see previous data
+                // this.setDisabled(true); // Don't disable if we have data
             }
-        }, 2000); // Check every 2 seconds
+        }, 5000); // Check every 5 seconds instead of 2
     }
 
     setDisabled(disabled) {

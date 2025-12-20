@@ -1,23 +1,43 @@
-// ... existing code ...
+const connections = {};
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  const tabId = sender.tab?.id;
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== "devtools") return;
 
-  if (message.type === 'metrics-update' && tabId && connections[tabId]) {
-    // console.log(`Background received metrics-update from tab ${tabId}:`, message.data); // Optional: Add for debugging
-    connections[tabId].postMessage({
-      type: 'metrics-update',
-      data: message.data
-    });
-  } else if (message.type === 'api-performance-update' && tabId && connections[tabId]) {
-    // Forward API updates directly if needed (though they should be in metrics-update now)
-    connections[tabId].postMessage({
-        type: 'api-performance-update',
-        data: message.data
-    });
-  }
-  // Handle other message types if necessary
-  return true; // Keep message channel open for async response if needed
+  const extensionListener = (message, sender, sendResponse) => {
+    // The original connection event doesn't include the tab ID of the
+    // DevTools page, so we need to send it explicitly.
+    if (message.type === 'init') {
+      connections[message.tabId] = port;
+      return;
+    }
+  };
+
+  // Listen to messages sent from the DevTools page
+  port.onMessage.addListener(extensionListener);
+
+  port.onDisconnect.addListener((port) => {
+    port.onMessage.removeListener(extensionListener);
+
+    const tabs = Object.keys(connections);
+    for (let i = 0, len = tabs.length; i < len; i++) {
+      if (connections[tabs[i]] === port) {
+        delete connections[tabs[i]];
+        break;
+      }
+    }
+  });
 });
 
-// ... existing code ...
+// Receive message from content script and relay to the devTools page for the current tab
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Messages from content scripts should have a sender.tab
+  if (sender.tab) {
+    const tabId = sender.tab.id;
+    if (tabId in connections) {
+      connections[tabId].postMessage(message);
+    }
+  } else {
+    // console.log("sender.tab not defined");
+  }
+  return true;
+});
