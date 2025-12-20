@@ -1,3 +1,6 @@
+## [1.1.7] - 2025-12-20
+- feat: Add performance metrics DevTools extension including a data provider, dock position validation, and initial UI controls.
+
 ## [1.1.6] - 2025-12-18
 - feat: Enhance service worker to track page scan events and update manifest for module support
 
