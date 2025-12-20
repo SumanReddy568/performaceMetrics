@@ -1,3 +1,6 @@
+## [1.1.8] - 2025-12-20
+- feat: Implement initial performance metrics collection and devtools integration.
+
 ## [1.1.7] - 2025-12-20
 - feat: Add performance metrics DevTools extension including a data provider, dock position validation, and initial UI controls.
 
