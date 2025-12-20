@@ -80,6 +80,7 @@ zip -r "$ZIP_FILE" . \
     -i "manifest.json" \
     -i "src/*" \
     -i "background/*" \
+    -i "utils/*" \
     -i "lib/*" \
     -i "icons/*" \
     -i "assets/styles/*.css" \
