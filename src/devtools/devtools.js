@@ -7,6 +7,7 @@ class PerformanceMetricsDevTools {
     this.requestsCount = 0;
     this.lastRequestTime = Date.now();
     this.metricsProvider = new MetricsProvider();
+    this.currentPageUrl = null;
 
     // Check dock position before initializing
     this.createErrorOverlay();
@@ -252,9 +253,12 @@ class PerformanceMetricsDevTools {
       'window.location.href',
       (result, error) => {
         if (!error) {
+          this.currentPageUrl = result;
           const urlElement = document.getElementById('currentUrl');
-          urlElement.textContent = this.formatUrl(result);
-          urlElement.title = result; // Set full URL as tooltip
+          if (urlElement) {
+            urlElement.textContent = this.formatUrl(result);
+            urlElement.title = result; // Set full URL as tooltip
+          }
         }
       }
     );
@@ -263,9 +267,12 @@ class PerformanceMetricsDevTools {
 
     // Update URL when page changes
     chrome.devtools.network.onNavigated.addListener((url) => {
+      this.currentPageUrl = url;
       const urlElement = document.getElementById('currentUrl');
-      urlElement.textContent = this.formatUrl(url);
-      urlElement.title = url; // Set full URL as tooltip
+      if (urlElement) {
+        urlElement.textContent = this.formatUrl(url);
+        urlElement.title = url; // Set full URL as tooltip
+      }
     });
   }
 
@@ -391,7 +398,7 @@ class PerformanceMetricsDevTools {
       this.panels.eventLoopLag = new EventLoopLagPanel('eventLoopLagPanel');
       this.panels.paintTiming = new PaintTimingPanel('paintTimingPanel');
       this.panels.navigationTiming = new NavigationTimingPanel('navigationTimingPanel');
-      this.panels.e2e = new E2EPanel('e2ePanel');
+      // this.panels.e2e = new E2EPanel('e2ePanel'); // E2EPanel is not defined
 
     } catch (e) {
       console.error("Error loading panels:", e);
@@ -482,7 +489,7 @@ class PerformanceMetricsDevTools {
       if (data.eventLoopLag) safeUpdatePanel(this.panels.eventLoopLag, data.eventLoopLag);
       if (data.paintTiming) safeUpdatePanel(this.panels.paintTiming, data.paintTiming);
       if (data.navigationTiming) safeUpdatePanel(this.panels.navigationTiming, data.navigationTiming);
-      if (data.e2e) safeUpdatePanel(this.panels.e2e, data.e2e);
+      // if (data.e2e) safeUpdatePanel(this.panels.e2e, data.e2e);
 
       // Auto-arrange panels after updating
       this.autoArrangePanels(data);
@@ -599,22 +606,26 @@ class PerformanceMetricsDevTools {
       chrome.windows.getAll({ populate: true }, windows => {
         const windowCount = windows.length;
         const tabCount = windows.reduce((count, window) => count + window.tabs.length, 0);
-        document.getElementById('chrome-windows').textContent = windowCount;
-        document.getElementById('chrome-tabs').textContent = tabCount;
+        const winEl = document.getElementById('chrome-windows');
+        const tabEl = document.getElementById('chrome-tabs');
+        if (winEl) winEl.textContent = windowCount;
+        if (tabEl) tabEl.textContent = tabCount;
       });
 
       // Get network status
       const networkStatus = navigator.onLine ? 'Online' : 'Offline';
       const indicator = document.getElementById('network-indicator');
-      indicator.className = 'metric-indicator ' + (navigator.onLine ? 'indicator-good' : 'indicator-bad');
-      document.getElementById('network-status').textContent = networkStatus;
+      if (indicator) indicator.className = 'metric-indicator ' + (navigator.onLine ? 'indicator-good' : 'indicator-bad');
+      const netEl = document.getElementById('network-status');
+      if (netEl) netEl.textContent = networkStatus;
 
       // Get system memory (if available)
       if (chrome.system?.memory) {
         chrome.system.memory.getInfo(info => {
           const usedMemory = ((info.capacity - info.availableCapacity) / info.capacity * 100).toFixed(1);
           const formattedMemory = `${usedMemory}% (${this.formatBytes(info.capacity - info.availableCapacity)} / ${this.formatBytes(info.capacity)})`;
-          document.getElementById('system-memory').textContent = formattedMemory;
+          const memEl = document.getElementById('system-memory');
+          if (memEl) memEl.textContent = formattedMemory;
         });
       }
 
@@ -632,7 +643,8 @@ class PerformanceMetricsDevTools {
           });
 
           const avgUsage = validProcessors > 0 ? (totalUsage / validProcessors).toFixed(1) : 0;
-          document.getElementById('system-cpu').textContent = `${avgUsage}%`;
+          const cpuEl = document.getElementById('system-cpu');
+          if (cpuEl) cpuEl.textContent = `${avgUsage}%`;
         });
       }
     } catch (e) {
@@ -672,7 +684,10 @@ class PerformanceMetricsDevTools {
       const timeDiff = (now - this.lastRequestTime) / 1000;
       const reqPerSec = (this.requestsCount / timeDiff).toFixed(1);
 
-      document.getElementById('requests-per-sec').textContent = `${reqPerSec}/s`;
+      const reqEl = document.getElementById('requests-per-sec');
+      if (reqEl) {
+        reqEl.textContent = `${reqPerSec}/s`;
+      }
 
       // Reset counter
       this.requestsCount = 0;

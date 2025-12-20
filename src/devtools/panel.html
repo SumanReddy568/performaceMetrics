@@ -75,7 +75,9 @@
         </a>
         <a href="https://aiqaagents.netlify.app/" target="_blank" class="header-promo-banner banner-qa">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            <path
+              d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+            </path>
             <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
             <line x1="12" y1="22.08" x2="12" y2="12"></line>
           </svg>
@@ -83,14 +85,22 @@
         </a>
       </div>
 
-      <!-- <div class="url-container">
+      <div class="url-container" style="display: none;">
         <span class="url-label">Monitoring:</span>
         <span class="url-value" id="currentUrl" title="">Loading...</span>
-      </div> -->
+      </div>
       <div class="system-metrics">
         <div class="metric-item">
           <span class="metric-label">Chrome:</span>
           <span class="metric-value" id="chrome-version">--</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Windows:</span>
+          <span class="metric-value" id="chrome-windows">0</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Tabs:</span>
+          <span class="metric-value" id="chrome-tabs">0</span>
         </div>
         <div class="metric-item">
           <div class="metric-indicator" id="network-indicator"></div>
@@ -104,6 +114,10 @@
         <div class="metric-item">
           <span class="metric-label">CPU:</span>
           <span class="metric-value" id="system-cpu">--</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Requests:</span>
+          <span class="metric-value" id="requests-per-sec">0/s</span>
         </div>
       </div>
     </header>

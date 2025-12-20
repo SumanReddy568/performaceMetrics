@@ -7,7 +7,6 @@ class MetricsProvider {
       network: [],
       fps: [],
       // Add new panels:
-      e2e: [],
       eventLoopLag: [],
       paintTiming: [],
       navigationTiming: []
@@ -58,10 +57,6 @@ class MetricsProvider {
       this._trimHistory('fps');
     }
 
-    // E2E
-    if (snapshot.e2e && Array.isArray(snapshot.e2e)) {
-      this.historicalData.e2e = snapshot.e2e.slice(-this.maxHistoryLength);
-    }
     // Event Loop Lag
     if (snapshot.eventLoopLag) {
       this.historicalData.eventLoopLag.push({

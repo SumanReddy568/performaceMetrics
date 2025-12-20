@@ -6,7 +6,7 @@ class BasePanel {
             return;
         }
 
-        this.lastUpdateTime = 0; // Start with 0 to force initial timeout
+        this.lastUpdateTime = Date.now(); // Initialize with current time to avoid huge timeout values
         this.timeoutDuration = options.timeoutDuration || 15000; // 15 seconds default
         this.checkActivityInterval = null;
         this.containerId = containerId; // Save ID for debugging
