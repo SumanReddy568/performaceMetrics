@@ -1,3 +1,6 @@
+## [1.1.9] - 2025-12-20
+- build: add utils directory to extension zip
+
 ## [1.1.8] - 2025-12-20
 - feat: Implement initial performance metrics collection and devtools integration.
 
