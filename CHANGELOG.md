@@ -1,3 +1,6 @@
+## [1.2.1] - 2026-01-04
+- feat: enhance user info storage and retrieval in analytics module
+
 ## [1.2.0] - 2026-01-04
 - feat: add USER_ID to storage keys
 
