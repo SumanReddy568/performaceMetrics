@@ -1,3 +1,6 @@
+## [1.2.0] - 2026-01-04
+- feat: add USER_ID to storage keys
+
 ## [1.1.9] - 2025-12-20
 - build: add utils directory to extension zip
 
