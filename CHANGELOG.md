@@ -1,4 +1,7 @@
 ## [1.2.1] - 2026-01-04
+- fix: correct version number to 1.2.0 and update promo link in devtools panel
+
+## [1.2.1] - 2026-01-04
 - feat: enhance user info storage and retrieval in analytics module
 
 ## [1.2.0] - 2026-01-04
