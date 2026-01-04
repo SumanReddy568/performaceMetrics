@@ -1,5 +1,22 @@
 const TRACK_URL = "https://multi-product-analytics.sumanreddy568.workers.dev/";
 
+// Get user info from storage
+let userInfo = {};
+if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    try {
+        const storageData = await new Promise((resolve) => {
+            chrome.storage.local.get(['user_id', 'user_email', 'user_hash'], resolve);
+        });
+        userInfo = {
+            userId: storageData.user_id || null,
+            email: storageData.user_email || null,
+            userHash: storageData.user_hash || null
+        };
+    } catch (e) {
+        console.warn('Failed to fetch user info for analytics:', e);
+    }
+}
+
 export async function track(eventName, options = {}) {
     try {
         const systemInfo = typeof window !== 'undefined' ? {
@@ -23,7 +40,8 @@ export async function track(eventName, options = {}) {
                 version: chrome?.runtime?.getManifest?.()?.version || '1.0.0',
                 metadata: {
                     system: systemInfo,
-                    ...options.meta
+                    ...options.meta,
+                    ...userInfo
                 }
             })
         });
