@@ -1,3 +1,6 @@
+## [1.2.2] - 2026-05-16
+- new worker migration
+
 ## [1.2.1] - 2026-01-04
 - fix: correct version number to 1.2.0 and update promo link in devtools panel
 
