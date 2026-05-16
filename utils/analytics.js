@@ -1,4 +1,6 @@
-const TRACK_URL = "https://multi-product-analytics.sumanreddy568.workers.dev/";
+import { WORKER_BASE } from "./endpoints.js";
+
+const TRACK_URL = `${WORKER_BASE}/api/event`;
 
 // Function to set user info in storage
 export async function setUserInfo(userId, email, userHash) {

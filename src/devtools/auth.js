@@ -1,11 +1,9 @@
-/**
- * Authentication Module for Locator Spy
- * Integrates with Cloudflare Auth Worker API
- */
+// Classic script (loaded without type="module"), so the ESM
+// utils/endpoints.js can't be imported here — keep the URL inline.
+const WORKER_BASE = "https://open-api-worker.sumanreddy568.workers.dev";
 
-// Configuration
 const AUTH_CONFIG = {
-  API_BASE_URL: "https://auth-worker.sumanreddy568.workers.dev",
+  API_BASE_URL: WORKER_BASE,
   SOURCE: "performance-metrics",
   STORAGE_KEYS: {
     TOKEN: "auth_token",
